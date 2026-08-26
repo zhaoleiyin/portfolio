@@ -17,6 +17,8 @@ const types = {
   ".mp4": "video/mp4",
   ".webm": "video/webm",
   ".mov": "video/quicktime",
+  ".webp": "image/webp",
+  ".pdf": "application/pdf",
 };
 
 createServer(async (req, res) => {
@@ -41,7 +43,7 @@ createServer(async (req, res) => {
     // 文件一旦被替换，ETag 变了就立刻拿到新的。
     // 之前用的是 max-age=3600，浏览器在一小时内根本不来问，
     // 换了图也还是显示旧的——就是「1.png 换了但页面还是老图」那个问题
-    const isMedia = [".mp4", ".webm", ".mov", ".png", ".jpg", ".gif", ".svg"].includes(ext);
+    const isMedia = [".mp4", ".webm", ".mov", ".png", ".jpg", ".webp", ".gif", ".svg"].includes(ext);
     const cacheControl = isMedia ? "no-cache" : "no-store";
 
     // 条件请求：浏览器带着上次的 ETag/时间戳来问，没变就回 304。
