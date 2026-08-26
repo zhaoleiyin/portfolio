@@ -67,8 +67,12 @@
   margin-right: var(--pad-x, 4.2%);
   font-family: var(--font-sans, "Geist", sans-serif);
 }
+/* 字号只在 About 这一块小一档：加了 Aurai 那段之后文字块变成三段，
+   原来的 2.6vw 会让整块超过 100vh（.about-inner 是 align-items:center，
+   超出后上下都被 .about 的 overflow:hidden 切掉）。降到 2.2vw 让三段
+   完整落在一屏内，正文层级仍然靠字重和颜色区分，不动其它区块 */
 .about-lead {
-  font-size: clamp(24px, 2.6vw, 48px);
+  font-size: clamp(21px, 2.2vw, 40px);
   line-height: 1.3;
   font-weight: 500;
   letter-spacing: 0.002em;
@@ -76,7 +80,7 @@
 }
 .about-sub {
   margin-top: 1.2em;
-  font-size: clamp(24px, 2.6vw, 48px);
+  font-size: clamp(21px, 2.2vw, 40px);
   line-height: 1.3;
   font-weight: 500;
   color: #777772;
