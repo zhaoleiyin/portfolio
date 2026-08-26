@@ -1,0 +1,361 @@
+/* ══════════════════════════════════════════════════
+   Glowyin Case Study 专属样式——只服务这一个 case，不进
+   css/case.css 那份跨 case 共用的模板文件。
+
+   和 Duolingo 的关系：sidebar、内容宽度、字体系统、字号层级、文字
+   透明度、分割线、section 间距、滚动逻辑、进场动画、ending、footer、
+   响应式断点全部来自共用模板，一条都没覆盖。这里只补一件模板里没有
+   的东西：工业设计项目需要的几种图片组合方式。
+   ══════════════════════════════════════════════════ */
+
+/* 全篇正文/大字钉死 15px：和 Duolingo、SVP 同一条规则——
+   模板默认的 clamp 会随视口浮到 19px，四个 case 并排看字号就不一样。
+   层级只靠字重和透明度，不靠字号 */
+.case-content .case-caption {
+  font-size: 15px;
+}
+.case-content .case-pull-quote {
+  font-size: 15px;
+}
+
+/* ══ Spacing ══
+   这一页不再有任何自己的间距数值。所有横向 gutter、纵向节奏、组与组
+   之间的距离，全部引用 css/case.css 里的 --case-gap（= Duolingo
+   sidebar 目录相邻两项的距离），和另外两个 case 是同一个来源。
+   本文件里唯一没走这个 token 的是 .case-problem 的 4vw——那是"标签栏
+   ↔ 内容栏"的分栏结构，和 .case-layout 的 3vw 同类，不是内容间距。*/
+/* 一列图片自上而下堆叠时用它，纵向间距 = 同一个 gutter。
+   用途是让"同一个 section 里的图与图"——不管左右还是上下、也不管是
+   同一组内部还是组与组之间——距离完全一致 */
+.gy-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--case-gap);
+}
+.gy-stack > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 0;
+}
+
+/* Hero：素材和首页 Work 卡片是同一个文件，比例、裁切方式都和模板里
+   Duolingo Hero 保持一致（16:9 + object-fit:cover），shared-element
+   过渡才接得上——两边不同比例或不同裁切的话，落位那一刻画面会跳 */
+.case-module-hero video,
+.case-module-hero img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+/* 通栏单图 */
+.case-media-full img,
+.case-media-full video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 侧栏项目标题：两段深浅不同的中性灰。Glowyin 是工业设计项目，
+   整体要更安静，所以不像 Duolingo（品牌绿）/ Chicken 5 Road（品牌黄）
+   那样上高饱和色，只在灰阶里做层次——和产品本身的金属/镜面质感一致，
+   也不会在黑底上抢主体。
+   用的是模板已有的 .case-title-accent 钩子，字号/字重/行高不变 */
+.case-title-accent {
+  color: #7d7d7d; /* “yin” —— 更深的一档 */
+}
+/* “Glow” —— 浅银灰，比 “yin” 亮一档，拉开层次。
+   两段都是纯中性（R=G=B），不引入任何色相 */
+.case-title-accent .gy-title-lead {
+  color: #bdbdbd;
+}
+
+/* ── Research：时间线 + 照片拼贴同一排 ──
+   两栏宽度不是拍脑袋定的，是按两张图的真实比例反推的：
+   timeline 822×1914（0.4295）、collage 1548×1016（1.5236）。
+   要让两者等高，栏宽比必须等于 0.4295 / 1.5236 = 0.2819。
+   collage 用 height:auto 决定行高，timeline 用 height:100% +
+   object-fit:contain 去贴合这个高度——contain 保证等比缩放，
+   不裁切也不拉伸，时间线内容本身一点没改。
+   这个比例和 gap 无关，所以 gutter 变了之后依然等高 */
+.case-research-row {
+  display: grid;
+  grid-template-columns: 0.2819fr 1fr;
+  gap: var(--case-gap);
+  align-items: start;
+}
+.case-research-timeline {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center top; /* 顶边对齐 */
+}
+.case-research-collage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ── Problem Statement：左标签 + 右单列四条 ──
+   editorial 排法：纯文字，没有 card / box / border / 背景。
+   左右两栏的 4vw 直接沿用 Duolingo 里同类"标签 + 内容"版式的
+   column-gap，属于分栏结构而不是内容间距，所以不走 --case-gap */
+.case-problem {
+  display: grid;
+  grid-template-columns: 25% 1fr;
+  gap: 4vw;
+  align-items: start;
+}
+.case-problem > .case-kicker {
+  margin: 0;
+}
+.case-problem-list {
+  list-style: none;
+  counter-reset: gy-problem;
+}
+.case-problem-list li {
+  counter-increment: gy-problem;
+  display: grid;
+  grid-template-columns: 2.4em 1fr;
+  align-items: baseline;
+  margin-top: var(--case-gap);
+  font-size: 15px;
+  line-height: 1.6;
+  color: #c8c8c2;
+  /* 正文走全站统一的次级正文透明度 */
+  opacity: var(--case-text-secondary-opacity);
+}
+.case-problem-list li:first-child {
+  margin-top: 0;
+}
+/* 序号：比正文更小、更低调。这里的 opacity 叠加在 li 的 0.58 之上
+   （0.58 × 0.62 ≈ 0.36），所以编号明显比正文更淡，但仍然是同一套
+   灰阶，没有引入新颜色 */
+.case-problem-list li::before {
+  content: counter(gy-problem, decimal-leading-zero);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  opacity: 0.62;
+}
+
+/* ══ Final Design：细节 + 主视觉 + 技术图的一组 editorial 排版 ══
+
+     ┌──────────┬─────────────────────┐
+     │  joint   │                     │
+     ├──────────┤     finalhero       │
+     │ speaker  │                     │
+     ├──────────┴─────────────────────┤
+     │       glowyintechnical         │
+     └────────────────────────────────┘
+
+   四张图一律 height:auto，按各自原始比例显示，没有任何裁切。
+
+   列宽 0.47475 : 1 是解出来的：要让左列两张的自然高度加上中间那道
+   gutter，正好等于右侧 Hero 的自然高度（这样整组的上下边才是齐的）。
+   注意这个比例依赖 gutter 的大小——gutter 从 20px 换成 --case-gap
+   之后重新解过一次，所以底边仍然严丝合缝。
+   用四张图的真实比例
+     joint 1041×1510、speaker 1920×2560、finalhero 2000×2667
+   列出 L·(h/w)joint + gap + L·(h/w)speaker = R·(h/w)hero，
+   再配上 L + R = 内容列宽 − gap，解得 L : R = 280.1 : 589.9 */
+.gy-final {
+  display: grid;
+  grid-template-columns: 0.47475fr 1fr;
+  gap: var(--case-gap);
+  align-items: start;
+}
+.gy-final img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.gy-final-main {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+/* 技术图：最后一行跨满两列——它是看完产品和细节之后的补充信息 */
+.gy-final-technical {
+  grid-column: 1 / -1;
+}
+
+/* ── How It Works：三个功能演示 ──
+   三张原图比例几乎完全一致（1920×2416、1920×2416、1627×2048，
+   都约等于 4:5），统一到 4/5 之后 cover 几乎不裁切，纯粹是把三者
+   对齐。图下只有编号 + 一个短标题，没有说明段落 */
+.gy-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--case-gap);
+  align-items: start;
+}
+.gy-features img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+.gy-feature figcaption {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7em;
+  margin-top: var(--case-gap);
+}
+/* 编号：和 Problem Statement 那四条用的是同一套编号语言 */
+.gy-feature-index {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: #c8c8c2;
+  opacity: 0.36;
+}
+.gy-feature-title {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #c8c8c2;
+  opacity: var(--case-text-secondary-opacity);
+}
+
+/* ══ Brand & Packaging ══
+   一个 section、四组，外层是 .gy-stack，所以组与组之间的距离和每组
+   内部的距离是同一个 --case-gap：
+
+     1) Packaging Process  concept sketch │ mechanism
+                                          │ pull-tab prototype
+     2) Brand Visual       typeface       │ poster
+     3) 包装线稿           横向通栏
+     4) Structure Study    结构图 1 │ 2 │ 3
+
+   所有图都是 height:auto、原始比例，不裁切。
+
+   用 flex 而不是 grid 是踩过坑才换的：grid 里如果某一栏有个跨行的
+   高元素，浏览器会把多出来的高度摊到它跨过的每一行上，右栏内部的
+   间距就会被撑大，和别处的 gutter 对不上。flex 的列高由内容自己
+   决定，多出来的部分留在下面，所有 gap 保持一致。 */
+
+/* ══ 两栏分栏：Brand Identity 和 Packaging 共用同一条中缝 ══
+   两段以前各自解各自的比例（1.00708 和 0.98548），结果左右边缘和
+   中间那条缝从上往下看是错开约 11px 的。现在统一到一个变量：
+   两段都用它，中缝的位置就一定一样。
+
+   1.00708 这个值本身来自 Brand Identity——typeface 1202×1492 和
+   poster 4331×5414 的原始比例几乎相同，按这个列宽比排两张正好等高。
+   Packaging 跟着它走，多出来的高度差由左边那张图裁掉一点点补齐
+   （见下面 .gy-pack-a-concept）*/
+.case {
+  --gy-col-split: 1.00708;
+}
+
+/* 1) Packaging Process：左边概念草图，右边机构图纸 + 抽拉原型 */
+.gy-pack-a {
+  display: flex;
+  gap: var(--case-gap);
+  align-items: flex-start;
+}
+.gy-pack-a img {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 0;
+}
+.gy-pack-a-concept {
+  /* 列宽跟 Brand Identity 完全一致 */
+  flex: var(--gy-col-split) 1 0;
+  /* 高度对齐：在这个列宽下，右栏（机构图 234.6 + 7 + 抽拉图 185.1）
+     总高 426.6，而概念草图按原始比例是 435.9——差 9.3px。
+     用户允许裁这张手绘图，所以给它一个算好的 aspect-ratio + cover，
+     纵向裁掉 2.1%（上下各约 1%，都是白边），换来左右两栏顶边底边
+     严格齐平。注意 caption 已经移出网格，不再参与这个计算 */
+  aspect-ratio: 1.02325;
+  height: auto;
+  object-fit: cover;
+}
+/* Pull-Tab Mechanism：独立的一行，右对齐到右侧图片的右缘。
+   它是 .gy-stack 的直接子元素，所以上下都是统一的 7px；
+   字号/颜色/透明度复用页面已有的 caption 层级 */
+.gy-pack-caption {
+  text-align: right;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #c8c8c2;
+  opacity: var(--case-text-secondary-opacity);
+}
+.gy-pack-col {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* 2) Brand Visual：字体规范 + 海报同一行
+   两张的原始比例几乎一样（typeface 1202×1492 = 1.2413，
+   poster 4331×5414 = 1.2500），列宽取 1.00708 : 1 之后两张的高度
+   完全相等——顶边和底边都对齐，谁也不比谁大一圈 */
+.gy-brand-row {
+  display: flex;
+  gap: var(--case-gap);
+  align-items: flex-start;
+}
+.gy-brand-row img {
+  display: block;
+  height: auto;
+  min-width: 0;
+  flex: 1 1 0;
+}
+.gy-brand-row img:first-child {
+  /* 和 Packaging 共用同一条中缝 */
+  flex: var(--gy-col-split) 1 0;
+}
+
+/* 3) 包装线稿：横向通栏 */
+.gy-pack-line {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 4) Structure Study：三张成品包装图单独成一组。
+   三张都是 1920×1080，所以等宽即等高，尺寸和间距天然统一，
+   不需要任何裁切 */
+.gy-structure {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--case-gap);
+  align-items: start;
+}
+.gy-structure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 0;
+}
+
+/* ── 窄屏：所有多栏组合一律摊平成单列，纵向间距仍然是同一个 gutter ── */
+@media (max-width: 900px) {
+  .case-research-row,
+  .case-problem,
+  .gy-features,
+  .gy-structure {
+    grid-template-columns: 1fr;
+    gap: var(--case-gap);
+  }
+  .case-research-timeline {
+    height: auto;
+  }
+  .gy-features img {
+    aspect-ratio: auto;
+  }
+  .gy-final {
+    grid-template-columns: 1fr;
+  }
+  /* 单列时主视觉排在两张细节之前——小屏幕上先看到最终产品更合理 */
+  .gy-final-main {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .gy-pack-a,
+  .gy-brand-row {
+    flex-direction: column;
+  }
+}

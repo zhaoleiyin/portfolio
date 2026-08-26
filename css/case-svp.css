@@ -1,0 +1,487 @@
+/* ══════════════════════════════════════════════════
+   SVP Case Study 专属样式——只服务这一个 case，不进
+   css/case.css 那份跨 case 共用的模板文件。
+
+   和 Duolingo 的关系：typography、navigation、sidebar、内容宽度、
+   margins、section 间距（--case-gap = 7px）、footer、Next Project、
+   响应式断点全部来自共用模板，一条都没覆盖。
+   这里只补 SVP 需要的东西：一套 cinematic editorial 排版原语——
+   非对称双图、三联画、UI 元件展板、占位块系统。
+
+   六段结构（What is → Why → What to see → How it works →
+   How it fits together → Vision）：
+     overview(hero) → problem(双图+引导句) →
+     direction(研究组合+三条归纳+FOV+三联+原则) →
+     experience(特大+导航+安全+环境，全页视觉最强) →
+     system(windshield AR + companion app + UI 展板) →
+     final(特大收尾)
+   ══════════════════════════════════════════════════ */
+
+/* 全篇正文字号统一成 15px：和 Duolingo 同一条规则（那边在
+   case-duolingo.css 里也是这么钉死的）——模板默认的 clamp 会随视口
+   浮动到 19px，两个 case 并排看正文就不一样大了 */
+.case-content .case-caption {
+  font-size: 15px;
+}
+/* 编辑性大字（What if navigation… / Phone down. Eyes forward. 等）
+   同样全部压到 15px——和 Duolingo 把 #research 的 pull-quote 降级成
+   正文是同一个做法。层级感只靠字重（pull-quote 本身是 500）和满亮度
+   白，不再靠字号。
+   同时放开模板给大字块的 26em 窄栏限制：压到 15px 之后 26em 只有
+   390px，一句话会被腰斩成两行——让它用整个内容列的宽度，装不下时
+   才自然折行 */
+.case-content .case-pull-quote {
+  font-size: 15px;
+}
+.case-content .case-module-typography {
+  max-width: none;
+}
+
+/* 侧栏项目标题：SVP 品牌黄。数值直接从 hero.jpg 里 "SVP" 字母的
+   像素采样而来（主色 #F8F858，3276 个样本压倒性一致）——之前试过
+   #FBFF2C，绿分量偏高、蓝分量太低，肉眼和图里的字明显有色差。
+   做法和 Duolingo（绿）/ Chicken 5 Road（黄）完全一样，
+   只走 .case-title-accent 钩子 */
+.case-title-accent {
+  color: #f8f858;
+}
+
+/* ── 占位块：flat 的深灰盒 + 居中小号 mono 标签 ──
+   按用户规格：不要边框、不要插图、不要装饰。比页面黑（#0a0a0a）
+   亮一档的 #141417，在黑底上能看出是一个"图片位"。
+   每个占位的最终比例由自己的 --r 决定——现在排的就是最终版式，
+   之后换真图不跳版 */
+.svp-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: var(--r, 16 / 9);
+  width: 100%;
+  min-height: 0;
+  background: #141417;
+  color: #6f6f76;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 12px;
+}
+
+/* ── 小号 mono 标签 / 图注（[Pedestrian ahead] 这类） ── */
+.svp-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8c8c86;
+}
+.svp-label-dim {
+  color: #5f5f66;
+}
+
+/* ── 02 The Problem 的文字层级 ──
+   灰色说明 → 图片 → 白色重点句：
+   开头那句陈述降到全站统一的次级正文透明度（和各 case 的
+   description 同一档）；结尾的 What if… 保持满亮度白 + 500 字重
+   （.case-pull-quote 本来的样子），是这一 section 唯一的重点句。
+   字号、布局、间距都不动 */
+#problem > .case-caption {
+  opacity: var(--case-text-secondary-opacity);
+}
+
+/* ── 02 The Problem：左右两张真实图片，等高不裁切 ──
+   两张原图比例不同（problem1 1000×667 = 3:2，problem2 1280×722 ≈
+   16:9），直接等分会一高一矮。列宽比 0.8457 : 1 是解出来的：
+   L·(667/1000) = R·(722/1280)，两张按原始比例排出来正好等高
+   （内容列 988px 时各为 449×300 / 531×300），一个像素不裁。
+   minmax(0, fr) 的原因同下面其它网格：防止图片的 min-content
+   把轨道比例撑歪 */
+.svp-problem-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8457fr) minmax(0, 1fr);
+  gap: var(--case-gap);
+  align-items: start;
+}
+.svp-problem-pair img {
+  display: block;
+  width: 100%;
+  height: auto; /* 原始比例，不裁切 */
+  min-width: 0;
+}
+
+/* ══ Design Direction ══ */
+
+/* ── Persona：editorial 人物摘要，不是灰色大卡也不是传统 UX 模板 ──
+   无独立背景卡片：左边人物大图贯穿整块高度，右边自上而下是
+   姓名/meta → 较大的 persona quote → 三个 outline 标签 →
+   三组简短信息（Pain points / Goal / Motivation）→ 黄色 INSIGHT
+   沉底。主视觉层级 = 照片、quote、标签、insight，其余都是辅助 */
+.svp-persona {
+  display: grid;
+  grid-template-columns: minmax(0, 0.36fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+.svp-persona-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 高度跟随右栏内容，宽度锁列宽，多余部分裁边 */
+  min-height: 0;
+}
+.svp-persona-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.svp-persona-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #f2f2f2;
+  opacity: var(--case-text-secondary-opacity); /* 姓名降为次级层级 */
+}
+.svp-persona-meta {
+  margin-top: 2px;
+}
+/* persona quote：正文大小、整体灰，只把关键词提亮成白——
+   不再和沉底的黄色 Insight 抢重点。不设 max-width，整句一行放下 */
+.svp-persona-quote {
+  margin-top: 16px;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #7d7d78;
+}
+.svp-persona-quote .svp-hl {
+  color: #f2f2f2;
+  font-weight: 500;
+}
+/* 三个 outline 小标签：mono、细描边药丸，不是按钮 */
+.svp-persona-tags {
+  list-style: none;
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--case-gap);
+}
+.svp-persona-tags li {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #c8c8c2;
+  border: 1px solid #2e2e33;
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+/* 三组简短信息：横向三列，label + 一到三行小字，不做 bullet 墙 */
+.svp-persona-groups {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+.svp-persona-group p {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #c8c8c2;
+  opacity: var(--case-text-secondary-opacity);
+}
+.svp-persona-group p + p {
+  margin-top: var(--case-gap);
+}
+.svp-persona-group .svp-label {
+  opacity: 1;
+  margin-bottom: var(--case-gap);
+}
+/* INSIGHT 沉底——这一块的落点。
+   标签和 Pain points 等分组标题同一层级（mono 小字灰），
+   结论句用高亮白（黄色大段文字可读性差，只留给品牌点缀） */
+.svp-persona-insight {
+  margin-top: auto;
+  padding-top: 18px;
+}
+.svp-persona-insight .svp-label {
+  margin-bottom: var(--case-gap); /* 和分组标题到内容的距离一致 */
+  /* 对齐 Pain points 等分组标题的实际渲染值（它们被
+     .svp-persona-group p 提到了 13.5px / #c8c8c2） */
+  font-size: 13.5px;
+  color: #c8c8c2;
+}
+.svp-persona-insight-text {
+  /* 不设 max-width：整句先占满一行，真装不下才折行 */
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #f2f2f2;
+}
+
+/* ── User Flow：品牌化的 visual flow diagram（内联 SVG）──
+   深色半透明节点卡、细灰连线、#FBFF2C 关键节点与转场、#C2EB2D 的
+   Yes 分支。SVG 按 viewBox 随内容列整体缩放，坐标都在 SVG 内部，
+   不参与页面 grid 计算 */
+.svp-flowmap {
+  width: 100%;
+}
+.svp-flowmap-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Experience 小节编号（01/02/03）：品牌黄 mono，嵌在 kicker 里 */
+.svp-learning-num {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: #f8f858;
+}
+
+/* ── Experience 的两张 detail 同排 ──
+   detail1 660×423、detail2 331×423 原始就等高，列宽比 1.994 : 1
+   （= 660/331）让两张按原比例排出来严格等高、零裁切 */
+.svp-detail-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.994fr) minmax(0, 1fr);
+  gap: var(--case-gap);
+  align-items: start;
+}
+.svp-detail-row img {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-width: 0;
+}
+
+/* ── Experience 单元的右下角轻说明：mono 小字、靠右、不抢视觉 ── */
+/* 和 Glowyin 的 Pull-Tab Mechanism 图注同一层级：正文字体 Geist 15px，
+   不再用 mono 标签体 */
+.svp-exp-note {
+  margin-top: var(--case-gap);
+  font-family: var(--font-sans, "Geist", sans-serif);
+  font-size: 15px;
+  line-height: 1.6;
+  text-align: right;
+  color: #c8c8c2;
+  opacity: var(--case-text-secondary-opacity);
+}
+/* 说明行接下一个素材单元，同一格距离 */
+.svp-exp-note + .case-module {
+  margin-top: var(--case-gap);
+}
+
+/* ── 12 Final：收尾大字 ──
+   "Eyes forward." 用现有 pull-quote 的最大档；下面只挂两行 tiny */
+.svp-final-sign {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ══ System：三行 UI System technical board ══
+   黑底、无背景卡；SVG 素材原样引用（比例细节不动）；
+   行间是轻微手绘感的波线（.svp-uis-rule，非机械直线） */
+/* Status 和 Typeface 右侧样张共用同一条左对齐线（内容列 61% 处），
+   两块上下呼应 */
+.svp-uis-row1,
+.svp-uis-type {
+  --uis-align-left: 61%;
+}
+.svp-uis-row1 {
+  display: grid;
+  grid-template-columns: var(--uis-align-left) minmax(0, 1fr);
+  gap: 0;
+  align-items: start;
+}
+.svp-uis-block {
+  min-width: 0;
+}
+.svp-uis-block > .svp-label {
+  display: block;
+  margin-bottom: 14px;
+}
+/* 图标网格：6 列等格，每格 1:1、flex 居中——同排图标共享同一条
+   水平中心线，行与行、列与列的间距都是同一个 20px。
+   每个图标先归一到 52 盒（保持各自原始比例），格子变小时按
+   max-% 等比缩，不会溢出 */
+.svp-uis-iconsgrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 440px; /* 收紧成一个 compact 的图标簇 */
+}
+.svp-uis-cell {
+  aspect-ratio: 1 / 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.svp-uis-cell svg {
+  width: auto;
+  height: auto;
+  max-width: 60%;
+  max-height: 60%;
+}
+/* navigation marker（路面 chevron）：又宽又扁，按统一盒归一后视觉
+   偏轻——单独放大约 20%，上限也放宽到 80% 格宽 */
+.svp-uis-cell .svp-ic-marker {
+  max-width: 80%;
+}
+.svp-uis-status {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 230px; /* 左缘落在共享对齐线上，不再贴右 */
+}
+.svp-uis-status figure {
+  min-width: 0;
+  text-align: center;
+}
+.svp-uis-status img {
+  display: block;
+  width: 84%; /* 相对小格的比例（格子本身已限宽变小） */
+  margin: 0 auto;
+  height: auto;
+}
+.svp-uis-status figcaption {
+  display: block;
+  margin-top: 16px; /* SAFE / CAUTION / ALERT 居中在各自徽章正下方 */
+}
+/* 手绘感分割线：SVG 波线随内容列拉伸，参与统一 7px 节奏 */
+.svp-uis-rule {
+  display: block;
+  width: 100%;
+  height: 6px;
+  margin: var(--case-gap) 0;
+}
+/* Color：五个色块横向连续（无缝相接），首尾轻圆角；
+   hex 号竖排在每块底部，深浅底各配可读的字色 */
+.svp-uis-colors {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  height: 150px;
+}
+/* mockup 是平角、无缝平接的色带 */
+.svp-uis-colors > div {
+  position: relative;
+  display: flex;
+  align-items: center; /* hex 竖排、垂直居中 */
+  padding-left: 16px;
+}
+.svp-uis-colors span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #17171a;
+}
+.svp-uis-colors > div:first-child span {
+  color: #d9d9d9; /* 深底换浅字 */
+}
+/* Typeface：左大字 AVENIR，右侧字符表。Avenir 是 Apple 系统字体，
+   其它平台回退到站内 Geist，不额外加载字体文件 */
+.svp-uis-type {
+  display: grid;
+  /* 左栏宽度 = 共享对齐线：右侧样张的左缘和上面 Status 左缘同一条线 */
+  grid-template-columns: var(--uis-align-left) minmax(0, 1fr);
+  gap: 0;
+  align-items: end; /* AVENIR 的底线和右栏 Regular/Medium 行对齐 */
+  font-family: "Avenir Next", "Avenir", var(--font-sans, "Geist", sans-serif);
+}
+.svp-uis-type-name {
+  font-size: clamp(52px, 6vw, 84px);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+  color: #f2f2f2;
+}
+.svp-uis-type-abc {
+  font-size: 34px;
+  font-weight: 500;
+  color: #f2f2f2;
+}
+.svp-uis-type-line {
+  margin-top: var(--case-gap);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: #c8c8c2;
+  opacity: var(--case-text-secondary-opacity);
+}
+.svp-uis-type-weights {
+  margin-top: 26px;
+  display: flex;
+  gap: 40px;
+  font-size: 15px;
+  color: #f2f2f2;
+}
+.svp-uis-type-weights .w-reg { font-weight: 400; }
+.svp-uis-type-weights .w-med { font-weight: 500; }
+
+/* ══ Final：左 final2 实拍 ｜ 右等高品牌 panel ══
+   参考版式：左图约 55%，右侧同高黑 panel，标题在上、
+   车形图标 + 正文沉底；panel 用两团极低透明度的品牌黄径向辉光
+   呼应参考图的蓝辉光，不引入新颜色（全部来自色板） */
+.svp-final-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: var(--case-gap);
+  align-items: stretch;
+}
+.svp-final-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 近方图，随 panel 高度微调裁边 */
+  min-width: 0;
+}
+.svp-final-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 9% 10%;
+  /* 背景直接用用户上传的 背景.png（889×1080 竖版辉光图），
+     cover 铺满 panel，不再用 CSS 渐变模拟 */
+  background: url("../assets/work/svp/%E8%83%8C%E6%99%AF.png") center / cover no-repeat #030304;
+}
+.svp-final-title {
+  font-size: clamp(28px, 3vw, 44px);
+  font-weight: 500;
+  line-height: 1.15;
+  color: #f2f2f2;
+}
+.svp-final-bottom {
+  margin-top: 40px;
+}
+.svp-final-car {
+  display: block;
+  width: 26px; /* 缩到原来的一半，左缘仍与正文左缘对齐 */
+  height: auto;
+}
+.svp-final-copy {
+  margin-top: 22px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #d9d9d9;
+}
+
+/* ── 窄屏：所有多栏组合摊平成单列，占位块按各自比例往下排；
+   展板降为两列，保留一点组合感 ── */
+@media (max-width: 900px) {
+  .svp-problem-pair,
+  .svp-detail-row,
+  .svp-persona,
+  .svp-persona-groups,
+  .svp-uis-row1,
+  .svp-uis-type,
+  .svp-final-row {
+    grid-template-columns: 1fr;
+  }
+  .svp-uis-colors {
+    height: 96px;
+  }
+}

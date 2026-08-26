@@ -1,0 +1,938 @@
+/* ══════════════════════════════════════════════════
+   Rise Streak Case Study — 只服务这一个 case 的样式。
+   通用骨架（左侧 sticky 侧栏 / .case-section / .case-kicker /
+   .case-caption / .case-divider / 结尾 Next Project）全部来自
+   css/case.css，这里只写这一页自己的排版原语：
+
+     · 占位块系统（.rs-ph / .rs-row）——所有真实素材未就位的位置
+     · 三档标题层级（section 大标题 / 子块标题 / 小标签）
+     · Final Experience 的加重（这是全页最重的一屏）
+     · Before & After 的两两对照
+     · Why It Works 的四条 principle
+     · Future Vision 的三个轻量小模块
+     · 结尾的 closing statement
+
+   间距一律走 css/case.css 的 --case-gap（7px），不在这里另立数值；
+   正文字号一律 15px，和 SVP / Duolingo / Glowyin / Chicken 统一。
+   ══════════════════════════════════════════════════ */
+
+/* ── 全站统一：case 正文里的说明文字和 pull-quote 都钉在 15px，
+      层级只靠字重和透明度拉开，不靠字号（和其它四个 case 一致） ── */
+.case-content .case-caption {
+  font-size: 15px;
+}
+
+/* 侧栏项目标题：Rise Streak 的品牌橙。数值来自 icon.png 里火苗
+   吉祥物的像素采样（主色区间 #F1A94F–#F4BE5E，取中段），做法和
+   Duolingo（绿）/ Chicken 5 Road（黄）/ SVP（黄）完全一样，
+   只走 .case-title-accent 这个钩子 */
+.case-title-accent {
+  color: #f2a94e;
+}
+
+/* ══ 占位块系统 ══
+   素材未就位的位置一律用它：比页面黑（#0a0a0a）亮一档的 #141417
+   平面块 + 居中的小号 mono 标签，一眼能看出"这里该有一张图/一段
+   视频"，不会被误认成素材加载失败。
+   比例由每个块自己的 --r 决定——现在排的就是最终版式，之后换成
+   真实素材不会跳版。 */
+.rs-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: var(--r, 16 / 9);
+  width: 100%;
+  background: #141417;
+  color: #6f6f76;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 12px;
+}
+/* 视频位比图片位再暗一点点，两种媒体在版式里能区分开 */
+.rs-ph-video {
+  background: #101013;
+}
+
+/* 并排的一行占位：列宽由 --cols 决定，行高由 --rh 决定。
+   行里的块不再各自用 aspect-ratio（那样宽度不同高度就会不同），
+   改成撑满行高——同一行的顶边和底边永远对齐 */
+.rs-row {
+  display: grid;
+  grid-template-columns: var(--cols, minmax(0, 1fr) minmax(0, 1fr));
+  gap: var(--case-gap);
+}
+.rs-row > .rs-ph,
+.rs-row .rs-ph {
+  aspect-ratio: auto;
+  height: 100%;
+  min-height: var(--rh, 40vh);
+}
+
+/* ══ 标题层级 ══
+   三档，全页只有这三档：
+     .rs-headline  section 的主标题（Title）
+     .rs-subtitle  Final Experience 内部子块的标题
+     .rs-label     mono 小标签（Home / Group / Before / After） */
+.rs-headline {
+  max-width: 18em;
+  font-size: clamp(24px, 2.4vw, 40px);
+  line-height: 1.28;
+  font-weight: 500;
+  color: #f2f2f2;
+}
+.rs-subtitle {
+  font-size: clamp(19px, 1.5vw, 25px);
+  line-height: 1.32;
+  font-weight: 500;
+  color: #f2f2f2;
+}
+.rs-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8c8c86;
+}
+/* section 里紧跟在大标题后面的那段 body：降到全站统一的次级透明度
+   （和各 case 的 description 同一档），标题保持满亮度白 */
+.rs-body {
+  opacity: var(--case-text-secondary-opacity);
+}
+/* 标题 → body 之间用统一间距；body 之后接媒体也一样 */
+.rs-headline + .rs-body,
+.rs-subtitle + .rs-body {
+  margin-top: var(--case-gap);
+}
+
+/* ══════════════════════════════════════════════════
+   02 The Problem —— editorial research composition
+   ══════════════════════════════════════════════════
+   规则：站在网站原本的黑底和内容栏 grid 上。没有浅色画布、没有
+   卡片、没有背景框、没有新的 display font——字体自始至终是全站
+   那一套正文字体，层级只靠字号 / 颜色 / 透明度 / 位置 / 留白。
+   Rise Streak 的品牌色只作为强调进来：数字、supported、icon、
+   细线、annotation。
+
+   构图本体是一块按比例缩放的画布（.rsp-stage，1 : 0.95），子元素
+   用百分比坐标叠在同一个画面里，彼此重叠错位——不是左右各摆几个
+   互不相关的模块。
+   ── */
+.rsp {
+  --rsp-orange: #f2a94e;
+  --rsp-orange-dim: rgba(242, 169, 78, 0.42);
+  --rsp-cream: #f2ece4;
+}
+
+/* ── 构图画布 ── */
+.rsp-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 0.66;
+  /* 画布内最高的人物在 12% 处（= 宽度的 7.9%），上面是空白——
+     负边距把这段空白吃掉，人物簇从 kicker 下面的标准间距处直接
+     开始。stage 无背景，被拉上去的只是透明区域 */
+  /* +40px：整组（人物+连线+数字）下沉，在 THE PROBLEM 和三条
+     findings 之间视觉居中；margin-bottom 同步再收 40px，findings
+     的位置保持不动——组内部什么都没改，只平移 */
+  margin-top: calc(var(--case-gap) - 7.45% + 40px);
+  margin-bottom: calc(-14% - 40px);
+}
+/* 所有构图元素共用的定位原语：坐标和宽度都是画布的百分比，
+   画布一缩放，整幅构图等比例跟着走 */
+.rsp-at {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+}
+
+/* 细橙线：人物之间、数字与人物簇之间。viewBox 与画布同比例，
+   坐标即百分比×10 / ×9.5，所以线的两端永远咬在正确的位置上 */
+.rsp-web {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.rsp-web-g path {
+  fill: none;
+  stroke: var(--rsp-orange-dim);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+/* ── 01 Problem statement：全段最大、最亮的字 ── */
+.rsp-kicker {
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(11px, 0.8vw, 13px);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8c8c86;
+}
+/* ── 02 People：整段的视觉主体 ──
+   圆片在黑底上是一圈很淡的暖色描边 + 几乎黑的填充，读起来是
+   "这里将来是一张人像"，而不是一块浅色卡片 */
+.rsp-face {
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  overflow: hidden;
+  /* 照片没加载出来时露出的底色，和圆的描边一起构成"这里是一张人像"
+     的占位观感；照片一到位就被完全盖住 */
+  background: #16130f;
+  z-index: 1;
+}
+/* 圆形裁切：object-position 稍微偏上，让人脸落在圆心而不是被裁掉
+   额头——这批照片都是半身像，正中裁会把人裁成"下巴 + 肩膀" */
+.rsp-face img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 32%;
+}
+/* 主角那一片：一圈很淡的暖色描边，是这一簇的视觉重心 */
+.rsp-face-lead {
+  box-shadow: 0 0 0 1px rgba(242, 169, 78, 0.45);
+}
+
+/* ── 03 两个 data point：数字大、label 很小 ──
+   数字用品牌橙，是画面里除人像外最亮的元素；label 压到最低一档，
+   两者的对比本身就是层级，不需要卡片把它们框起来 */
+.rsp-stat {
+  z-index: 1;
+}
+.rsp-stat-num {
+  display: block;
+  font-size: clamp(52px, 6.2vw, 104px);
+  line-height: 0.9;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  color: var(--rsp-orange);
+  /* 0 → 38 位数会变，等宽数字位防止整块左右抖动 */
+  font-variant-numeric: tabular-nums;
+}
+.rsp-stat-label {
+  display: block;
+  margin-top: 10px;
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(10px, 0.75vw, 12px);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #8c8c86;
+}
+
+/* ── 04 Findings：小号 annotation，不是卡片、不是列表 ──
+   上面一条很短的橙色细线，和连接人物的线是同一种语言，把三条
+   annotation 收进同一幅 research 图里 */
+/* 三条并排在数字下面。不是卡片、不是列表：没有底色没有边框，
+   只有 icon + 一行短文字，靠位置和低亮度归入同一幅 research 图 */
+.rsp-notes {
+  /* 三条 findings 单独一行，与上面的"人物+数据"组留明确间距 */
+  margin-top: clamp(28px, 3vw, 48px);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(20px, 2.4vw, 46px);
+}
+.rsp-note-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.rsp-ic {
+  flex: none;
+  width: clamp(20px, 1.7vw, 26px);
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rsp-orange);
+}
+.rsp-ic svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* 明显小于 Insight，颜色也压下去——它是注释，不是标题 */
+.rsp-note-text {
+  font-size: clamp(13px, 1.02vw, 15px);
+  line-height: 1.42;
+  color: var(--rsp-cream);
+  opacity: 0.72;
+}
+
+
+
+/* ── 窄屏：绝对定位的构图在这个宽度下没有意义，整块退回正常文档流，
+      按 Problem → People → Data → Findings 的顺序纵向读。
+      视觉语言（橙色数字、描边 icon、低透明度注释、大小不一的人物圆片）
+      全部保留——圆片的相对大小和横向错位直接复用桌面版那套 --w / --x
+      坐标按比例压缩，不另写一套数值，两端永远是同一幅构图 ── */
+@media (max-width: 860px) {
+  .rsp-stage {
+    aspect-ratio: auto;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(22px, 5vw, 38px);
+  }
+  /* 连接线是按画布百分比坐标画的，脱离绝对定位后就对不上了 */
+  .rsp-web {
+    display: none;
+  }
+  .rsp-at {
+    position: static;
+    width: 100%;
+  }
+
+  /* 人物照片：宽度取自各自的 --w（桌面是画布宽的百分比），乘一个
+     系数放大到单列里——10 张照片的相对大小关系原样保留。
+     横向位置同样取自各自的 --x，压缩后作为左边距，形成一条自然的
+     斜向散落，而不是居中排成一列 */
+  .rsp-face {
+    width: calc(var(--w) * 2.7);
+    max-width: 46%;
+    margin-left: calc(var(--x) * 0.62);
+  }
+  /* 相邻两张大幅往上收，10 张叠成一簇而不是拉成很长的一条 */
+  .rsp-face + .rsp-face {
+    margin-top: -13vw;
+  }
+
+  /* 三条 finding 在窄屏改成纵向堆叠 */
+  .rsp-notes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* 两个数字：第二个往右错开，保持"分列人物簇两侧"的关系。
+     width 必须回到 auto——上面 .rsp-at 把宽度设成了 100%，再叠一个
+     34% 的左边距就会顶出视口 */
+  .rsp-stat {
+    width: auto;
+    margin-top: clamp(10px, 3vw, 24px);
+  }
+  .rsp-stat + .rsp-stat {
+    margin-left: 34%;
+    margin-top: 0;
+  }
+
+  /* annotation 跟着各自的 --x 轻微错开，避免三条齐头变成列表 */
+}
+
+/* ══ 05 Final Experience ══
+   全页最重的一屏：标题比其它 section 大一档，主 prototype 位
+   贴到视口两侧边缘（脱离侧栏的缩进），Research / Process 那几屏
+   都没有这个待遇——视觉权重的差别就建立在这里 */
+/* Final Experience 的 section 标题：刻意不做大标题感。手机 UI 才是
+   这一屏的主视觉，标题只是引子——参考 Duolingo 那种全篇克制、几乎
+   没有大字的比例 */
+.rs-headline-lg {
+  max-width: 20em;
+  font-size: clamp(21px, 2vw, 28px);
+  line-height: 1.24;
+}
+/* ══════════════════════════════════════════════════
+   03 Solution —— 一句话 + 四个手机 UI
+   ══════════════════════════════════════════════════ */
+/* 整段唯一的一句话：正文字号（15px）+ 全站统一的次级档。
+   注意：它本身是 .case-module，case.js 的揭示动画会在行内写
+   opacity:1 盖掉 CSS 的 opacity——所以次级透明度烘进颜色的
+   alpha（0.58 = --case-text-secondary-opacity 的值），不走 opacity */
+/* 满亮度白：这句 HMW 是整段的叙事枢轴，也是 Solution 唯一的
+   视觉锚点（四个手机标签都是次级小灰字） */
+.rs-sol-line {
+  margin-top: clamp(14px, 1.4vw, 24px);
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #ffffff;
+}
+
+/* 四个手机并排一行，等宽等高（真实截图 430×949） */
+.rs-sol-phones {
+  margin-top: clamp(32px, 3.4vw, 64px);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(10px, 1.4vw, 26px);
+}
+.rs-sol-phone img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 430 / 949;
+}
+/* 说明文字贴在每个手机的右下角：右对齐、最小的一档字号、压低亮度 */
+.rs-sol-phone figcaption {
+  margin-top: 12px;
+  text-align: right;
+  font-size: clamp(12px, 0.95vw, 14px);
+  line-height: 1.4;
+  color: #f2ece4;
+  opacity: 0.62;
+}
+
+/* ── 第一部分 / 第二部分：只用一条细线 + 一个 mono 小标签分隔，
+      不做卡片、不加背景框 ── */
+/* 第一部分：kicker 下面直接就是内容——没有横线，间隔走全站统一的
+   --case-gap（.rs-fx-part 的 border 规则在后面，这里要连 border 一起
+   压掉，否则同权重后者生效） */
+.rs-fx-part-first {
+  margin-top: var(--case-gap);
+}
+.rs-fx-part.rs-fx-part-first {
+  border-top: none;
+  padding-top: 0;
+  margin-top: var(--case-gap);
+}
+.rs-fx-part {
+  border-top: 1px solid #222220;
+  padding-top: var(--case-gap);
+  margin-top: calc(var(--case-gap) * 2);
+}
+.rs-fx-part > .rs-label + .case-module {
+  margin-top: var(--case-gap);
+}
+
+/* 三条完整 flow：每条各占一整行，视频和文字左右交替
+   （1 视频左 / 2 视频右 / 3 视频左）。这是整页的主视觉，尺寸给足 */
+.rs-fx-flows {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(48px, 6vw, 120px);
+}
+.rs-fx-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
+  gap: clamp(28px, 4.4vw, 90px);
+  align-items: center;
+}
+/* 文字缩小后，手机 UI 相应放大——它是这一屏的绝对主视觉。
+   justify-self: start：视频贴住自己那一列的左边缘，flow 2 的文字
+   （同样在第 1 列）就和上下两条 flow 的视频共用同一条左线 */
+.rs-fx-media {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+  width: 100%;
+  max-width: 420px;
+}
+.rs-fx-copy {
+  grid-column: 2;
+  grid-row: 1;
+}
+/* 交替行：只换两列的归属，DOM 顺序不变（视频始终写在文字前面，
+   窄屏塌成单列时永远是"先看画面、再读文字"） */
+.rs-fx-row-alt .rs-fx-media {
+  grid-column: 2;
+}
+.rs-fx-row-alt .rs-fx-copy {
+  grid-column: 1;
+  /* flow 2（文字在左的那行）：文字整体右移一档，不顶着内容列
+     最左线（用户指定） */
+  padding-left: clamp(24px, 3.5vw, 64px);
+}
+.rs-fx-media video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--vr, 960 / 1920);
+}
+
+/* 文字块：mono 小标签 → 大标题 → 「做了什么 → 为什么」的步骤行。
+   层级只靠字号和颜色，橙色只落在每一步的"为什么"上 */
+.rs-fx-eyebrow {
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(11px, 0.85vw, 12px);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8c8c86;
+}
+.rs-fx-title {
+  margin-top: 12px;
+  font-size: clamp(20px, 1.85vw, 23px);
+  line-height: 1.22;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: #f2f2f2;
+}
+.rs-fx-steps {
+  margin-top: clamp(18px, 2vw, 30px);
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.1vw, 18px);
+}
+.rs-fx-step {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(8px, 0.9vw, 16px);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.rs-fx-step-do {
+  color: #f2f2f2;
+}
+.rs-fx-step-arrow {
+  color: #6f6f6a;
+}
+/* 每一步的"为什么"——整块文字里唯一的品牌色 */
+.rs-fx-step-why {
+  color: var(--rs-orange, #f2a94e);
+}
+
+/* View flow：指向该条 flow 的 Figma 原型。带 href 时是正常链接，
+   悬停整体提亮、箭头右移一点；没有 href（URL 还没接上）时不显示
+   手型光标，避免看着能点其实点不动 */
+.rs-fx-viewflow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: clamp(20px, 2.2vw, 34px);
+  font-size: 15px;
+  color: var(--rs-orange, #f2a94e);
+  text-decoration: none;
+  opacity: 0.9;
+  transition: opacity 0.25s ease;
+}
+.rs-fx-viewflow:not([href]) {
+  cursor: default;
+}
+.rs-fx-viewflow[href]:hover {
+  opacity: 1;
+}
+.rs-fx-viewflow span {
+  transition: transform 0.25s ease;
+}
+.rs-fx-viewflow[href]:hover span {
+  transform: translateX(4px);
+}
+
+/* 三个设计细节：明显比上面的 flow 紧凑——crop 用横构图（是局部
+   放大，不是整屏），说明压到最小一档并降亮度。它是"再看近一点"，
+   不是第二组 flow */
+/* Details：一排三个，对齐的是"画面里的内容"而不是盒子——
+   01 的手机满幅（内容占高 100%）、02 的手机在画面里只占 93.75%
+   且顶部空 2.92%、03 的组件满幅。列宽按内容几何反解
+   （0.914 : 1 : 3.074），三块内容的渲染高度严格相等；
+   02 的视频再上移自身高度的 2.92%，三块内容的顶边也同线。
+   minmax(0,) 必须有——02 的标题是 nowrap，裸 fr 会被它的
+   min-content 顶宽，列宽就不跟比例走了 */
+.rs-fxd-row {
+  display: grid;
+  grid-template-columns: minmax(0, 0.914fr) minmax(0, 1fr) minmax(0, 3.074fr);
+  gap: clamp(16px, 2vw, 40px);
+  align-items: start;
+}
+.rs-fxd-item-sound video {
+  transform: translateY(-2.92%);
+}
+.rs-fxd-item video,
+.rs-fxd-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--dr);
+  object-fit: cover;
+}
+/* 编号 + 名字：媒体上方。名字是正文字号 + 次级透明度——三个模块
+   除此之外没有任何文字 */
+/* 编号+标题一行读完：nowrap，01/02 的窄列放不下时允许溢进列间
+   gap（gap 有 16–40px，足够），不折行 */
+.rs-fxd-tag {
+  display: flex;
+  align-items: baseline;
+  white-space: nowrap;
+  margin-bottom: 12px;
+  font-size: 15px;
+  font-weight: 400;
+  color: #c8c8c2;
+  opacity: var(--case-text-secondary-opacity);
+}
+/* 编号和标题同一行 */
+.rs-fxd-num {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #8c8c86;
+  margin-right: 8px;
+}
+/* 声音开关：02 标题行末尾的小喇叭 icon。静音态 = 斜线可见、声波
+   隐藏；出声态（.is-on）反过来。hover 提亮为品牌橙（行为在
+   js/case-rise-streak.js：点击解除静音重播，再点回到静音） */
+.rs-fxd-sound {
+  margin-left: auto;
+  align-self: center;
+  /* flex 子项默认可收缩——列窄时按钮会被挤成几像素的细缝，
+     等于隐形。禁止收缩，标题溢进列间 gap 由 nowrap 方案兜底 */
+  flex: none;
+  /* 负的纵向边距：按钮 30px 高，但不能把 21px 的标题行撑高——
+     否则 02 的视频会被推得比 01/03 低 */
+  margin-top: -8px;
+  margin-bottom: -8px;
+  padding: 3px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  /* 高亮橙、满透明度——要一眼看到 */
+  color: #fda739;
+  opacity: 1;
+  transition: transform 0.25s ease;
+}
+.rs-fxd-sound:hover {
+  transform: scale(1.12);
+}
+.rs-fxd-sound.is-on {
+  color: var(--rs-orange, #f2a94e);
+}
+.rs-fxd-sound svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.rs-fxd-sound .rs-snd-body {
+  fill: currentColor;
+  stroke: none;
+}
+.rs-fxd-sound .rs-snd-wave {
+  display: none;
+}
+.rs-fxd-sound.is-on .rs-snd-wave {
+  display: block;
+}
+.rs-fxd-sound.is-on .rs-snd-slash {
+  display: none;
+}
+
+
+
+@media (max-width: 860px) {
+  /* 窄屏：flow 塌成单列（视频在上、文字在下），details 也单列 */
+  .rs-fx-row,
+  .rs-fx-row-alt {
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(20px, 5vw, 36px);
+  }
+  .rs-fx-media,
+  .rs-fx-copy,
+  .rs-fx-row-alt .rs-fx-media,
+  .rs-fx-row-alt .rs-fx-copy {
+    grid-column: 1;
+  }
+  .rs-fx-media {
+    grid-row: 1;
+    justify-self: start;
+    max-width: 260px;
+  }
+  .rs-fx-copy {
+    grid-row: 2;
+  }
+  .rs-sol-phones {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .rs-fxd-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(24px, 6vw, 40px);
+  }
+  /* Testing 的对照在窄屏塌成上下（箭头转个方向意义不大，隐藏） */
+  .rs-ba-pair {
+    flex-direction: column;
+    gap: clamp(20px, 5vw, 32px);
+  }
+  .rs-ba-arrow {
+    display: none;
+  }
+  /* 竖屏视频在单列下不要占满全宽 */
+  .rs-fxd-row .rs-fxd-item video {
+    max-width: 240px;
+  }
+}
+
+/* ══ Campaign（Closing）══
+   kicker → campaign 图 → 右下角一句高亮白收束句，标准间距 */
+
+/* 收束句：campaign 图右下角——正文字号、次级档、右对齐到图的
+   右边缘（图是通栏满幅，无透明边，不需要补偿） */
+.rs-closing-line {
+  margin-top: var(--case-gap);
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 600;
+  text-align: right;
+  /* Semibold + 80% 白 */
+  color: rgba(255, 255, 255, 0.8);
+}
+.rs-closing-visual {
+  margin-top: var(--case-gap);
+}
+.rs-closing-visual img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ══ Testing ══
+   两组设计迭代上下排列，每组 Before → After 两台并排。
+   静态展示：无卡片、无背景、左对齐，间距走 --case-gap；
+   组与组之间留明显呼吸 */
+.rs-ba + .rs-ba {
+  margin-top: clamp(48px, 5vw, 88px);
+}
+.rs-ba-pair {
+  margin-top: var(--case-gap);
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(18px, 2.2vw, 44px);
+}
+.rs-ba-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* BEFORE / AFTER 小标签：BEFORE 白、AFTER 品牌橙 */
+.rs-ba-tag {
+  margin-bottom: var(--case-gap);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+.rs-ba-tag-after {
+  color: var(--rs-orange, #f2a94e);
+}
+/* 两台手机中间的小箭头，和 flow 步骤里的箭头同一种语言 */
+.rs-ba-arrow {
+  align-self: center;
+  font-size: clamp(16px, 1.4vw, 22px);
+  color: #6f6f6a;
+}
+/* 说明右对齐：文字最右边 = 对应手机图片的最右边（Home 两张的
+   画布右侧有透明边，各自用内联 padding-right 补偿到可见机身） */
+.rs-ba-item figcaption {
+  margin-top: var(--case-gap);
+  font-size: 15px;
+  line-height: 1.6;
+  color: #c8c8c2;
+  opacity: var(--case-text-secondary-opacity);
+  text-align: right;
+}
+
+/* ══════════════════════════════════════════════════
+   06 Design System —— 按用户的 spec 版式
+   ══════════════════════════════════════════════════
+   三排：COLOR|TYPE（很矮）→ LOGO|MASCOT（整段最大）→ ICONS（收尾）。
+   排与排之间一条水平细线；第一二排内部左右两块之间一条垂直细线。
+   标题只有五个 mono 小标签，没有描述文字。
+   ── */
+.rs-ds-r1,
+.rs-ds-r2 {
+  display: grid;
+  gap: clamp(20px, 2.6vw, 52px);
+}
+/* 第一排：Color 稍宽、Type 稍窄；垂直分隔线画在右块的左侧 */
+.rs-ds-r1 {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+}
+/* 第二排：Logo | Mascot(3×3) | Icons —— 三块同排，右两块等高 */
+/* .case-module.rs-ds-r2 双类：case.css 的 .case-module + .case-module
+   （7px）优先级更高，必须压过它，行距才能真正拉开 */
+.case-module.rs-ds-r2 {
+  /* 严格等宽的左右两个区域 */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  border-top: 1px solid #222220;
+  margin-top: clamp(36px, 4vw, 68px);
+  /* 行上下留白平衡：下侧减去 Testing 分割线自带的 7px margin */
+  padding-top: clamp(40px, 4vw, 64px);
+  padding-bottom: calc(clamp(40px, 4vw, 64px) - var(--case-gap));
+  align-items: stretch;
+}
+/* label 绝对定位在区域左上角——只是标签，不占流、不影响下面
+   内容组的居中计算；内容组用 margin:auto 在整列高度里水平+垂直
+   居中，min-height 给出上下空气，两列等高 → 两组视觉中心必然
+   落在同一条水平线上 */
+.rs-ds-r2 > .rs-ds-block {
+  position: relative;
+  min-height: clamp(270px, 25vw, 340px);
+}
+.rs-ds-r2 > .rs-ds-block > .rs-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin-bottom: 0;
+}
+/* 第二列的 label 要落在竖分割线之后的内容区，不是压在线上 */
+.rs-ds-r2 > .rs-ds-block + .rs-ds-block > .rs-label {
+  left: clamp(20px, 2.6vw, 52px);
+}
+.rs-ds-r1 > .rs-ds-block + .rs-ds-block,
+.rs-ds-r2 > .rs-ds-block + .rs-ds-block {
+  border-left: 1px solid #222220;
+  padding-left: clamp(20px, 2.6vw, 52px);
+}
+
+/* 每个 block 是纵向 flex：label 是区域标题，内容组用 margin:auto
+   在剩余空间里水平+垂直居中——四个模块都居中于自己的区域，
+   不再左上角对齐 */
+.rs-ds-block {
+  display: flex;
+  flex-direction: column;
+}
+.rs-ds-block > .rs-label {
+  flex: none;
+  margin-bottom: calc(var(--case-gap) * 2);
+}
+.rs-ds-colors,
+.rs-ds-type,
+.rs-ds-icon-grid,
+.rs-ds-mascots {
+  margin: auto;
+}
+
+/* ── COLOR：圆角方块 + hex，没有名字，矮 ── */
+.rs-ds-colors {
+  display: grid;
+  grid-template-columns: repeat(4, clamp(56px, 5.5vw, 84px));
+  gap: clamp(10px, 1.2vw, 24px);
+  width: max-content;
+}
+.rs-ds-chip {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 22%;
+  /* #1A1A1A 在黑底上需要一圈极淡的亮描边才看得出边界 */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.rs-ds-hex {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(9px, 0.72vw, 11px);
+  letter-spacing: 0.04em;
+  color: #8c8c86;
+}
+
+/* ── TYPE：两个字体名并排，各配一行用途，没有 role 标签 ── */
+.rs-ds-type {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: clamp(20px, 2.6vw, 52px);
+  align-items: start;
+  width: max-content;
+}
+/* 名字一行放下（nowrap）——SF Compact Text 一折行两栏就不齐了；
+   字号跟着收一档，保证最长的名字也在一行内 */
+.rs-ds-font-name {
+  font-size: clamp(18px, 1.7vw, 27px);
+  line-height: 1.2;
+  white-space: nowrap;
+  color: #f2f2f2;
+}
+.rs-ds-font-kanit {
+  font-family: "Kanit", var(--font-sans, sans-serif);
+  font-weight: 600;
+}
+/* SF Compact 只在 Apple 设备上有；其它平台回落到系统 UI 字体 */
+.rs-ds-font-sf {
+  font-family: "SF Compact Text", -apple-system, "SF Pro Text", system-ui, sans-serif;
+  font-weight: 500;
+}
+.rs-ds-font-note {
+  margin-top: 6px;
+  font-size: 15px;
+  color: #8c8c86;
+}
+/* 数字信息（字重 · 字号），mono——两栏同一结构：名字/用途/数字
+   三行高度一致，自然对齐 */
+.rs-ds-font-spec {
+  margin-top: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(10px, 0.8vw, 12px);
+  letter-spacing: 0.04em;
+  color: #6f6f6a;
+}
+
+/* ── ICONS：左块，规整 4×4 小网格。glyph 高度沿用之前按墨迹
+      归一的三档（基准/snug/tight），只是从横排换成网格 ── */
+.rs-ds-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(4, clamp(40px, 4vw, 56px));
+  justify-items: center;
+  align-items: center;
+  width: max-content;
+  row-gap: clamp(30px, 3.25vw, 52px);
+  column-gap: clamp(18px, 2vw, 34px);
+}
+.rs-ds-icon-grid img {
+  height: clamp(18px, 1.6vw, 24px);
+  width: auto;
+  opacity: 0.85;
+}
+.rs-ds-icon-grid img.rs-ic-snug {
+  height: clamp(16.9px, 1.5vw, 22.6px);
+}
+.rs-ds-icon-grid img.rs-ic-tight {
+  height: clamp(16.2px, 1.44vw, 21.6px);
+}
+
+/* ── MASCOT：九个品牌色状态，3×3、收小一档，没有底板 ── */
+.rs-ds-mascots {
+  display: grid;
+  width: min(clamp(252px, 25.3vw, 348px), 100%);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  justify-items: center;
+  gap: clamp(8px, 1vw, 18px);
+}
+.rs-ds-mascots img {
+  width: 62%;
+  height: auto;
+}
+
+
+
+@media (max-width: 860px) {
+  /* 双类：桌面规则是 .case-module.rs-ds-r2，这里要同权重才能覆盖 */
+  .case-module.rs-ds-r1,
+  .case-module.rs-ds-r2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rs-ds-r1 > .rs-ds-block + .rs-ds-block,
+  .rs-ds-r2 > .rs-ds-block + .rs-ds-block {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid #222220;
+    padding-top: calc(var(--case-gap) * 2);
+  }
+  /* 窄屏竖线没了，第二块 label 的缩进也归零 */
+  .rs-ds-r2 > .rs-ds-block + .rs-ds-block > .rs-label {
+    left: 0;
+    top: calc(var(--case-gap) * 2);
+  }
+  .rs-ds-type {
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(16px, 4vw, 24px);
+  }
+  .rs-ds-mascots {
+    max-width: 300px;
+  }
+  .rs-ds-icon-grid {
+    max-width: 260px;
+  }
+}

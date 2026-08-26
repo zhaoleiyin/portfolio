@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Step Inside Tomorrow — Zhaolei Yin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <!-- hero-bg.css 只取它开头那段全站基础 reset，其余规则在本页没有
+       对应 DOM，不影响视觉（和其它 case 页一致） -->
+  <link rel="stylesheet" href="../css/hero-bg.css" />
+  <link rel="stylesheet" href="../css/site-chrome.css" />
+  <link rel="stylesheet" href="../css/work.css" />
+  <link rel="stylesheet" href="../css/case.css" />
+  <!-- 只服务这一个 case 的样式（CBS Blue 内容视觉 + 占位块系统），
+       不进共用模板 -->
+  <link rel="stylesheet" href="../css/case-step-inside-tomorrow.css" />
+
+  <!-- 进场动画脚本提前并行下载（和其它 case 页一致） -->
+  <link rel="preload" as="script" href="../vendor/gsap/gsap.min.js" />
+  <link rel="preload" as="script" href="../js/case-enter.js" />
+
+  <!-- 进场过渡交接点：必须在首次绘制前同步跑完（和其它 case 页
+       同一份逻辑，只有 slug 不同） -->
+  <script>
+    (function () {
+      try {
+        if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+        var raw = sessionStorage.getItem("case-enter");
+        if (!raw) return;
+        sessionStorage.removeItem("case-enter");
+        var d = JSON.parse(raw);
+        if (!d || d.slug !== "step-inside-tomorrow") return;
+        if (Date.now() - d.t > 4000) return;
+        if (!d.w || !d.h) return;
+        if (window.innerWidth < 900) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        var r = document.documentElement;
+        r.style.setProperty("--enter-x", d.x + "px");
+        r.style.setProperty("--enter-y", d.y + "px");
+        r.style.setProperty("--enter-w", d.w + "px");
+        r.style.setProperty("--enter-h", d.h + "px");
+        r.dataset.caseEnterTime = d.ct || 0;
+        window.__caseEnterPoster = d.poster || "";
+        r.dataset.caseEnter = "1";
+      } catch (e) {
+        /* 忽略，正常显示页面 */
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- 全局固定顶栏/底栏：和 index.html 完全同一份标记 -->
+  <header class="site-nav" id="site-nav">
+    <a class="site-nav-logo" href="../index.html#hero">ZHAOLEI YIN</a>
+    <nav class="site-nav-links">
+      <a href="../index.html#work">Work</a>
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#outro">Contact</a>
+    </nav>
+  </header>
+  <footer class="site-footer" id="site-footer">
+    <span>&copy; 2026 ZHAOLEI YIN</span>
+    <a class="site-footer-mid" href="https://www.linkedin.com/in/zhaolei-yin/" target="_blank" rel="noopener">LINKEDIN</a>
+    <a href="mailto:yinzhaolei1113@gmail.com">YINZHAOLEI1113@GMAIL.COM</a>
+  </footer>
+
+  <!-- CBS — Step Inside Tomorrow Case Study：严格沿用共用模板
+       （css/case.css + js/case.js），外围保持全站黑色系统，内容视觉
+       用 CBS Blue + warm white 做点缀。
+       Presentation 是素材不是版式：research 数据重新按黑底系统排，
+       Experience 是主角，Campaign 收视觉高潮。
+       除 Hero（真实素材，和首页 Work 卡片同一文件，shared-element
+       过渡需要）之外，媒体位暂用带标签的占位块（.sit-ph），之后按
+       标签逐张替换真实素材，占位比例就是最终版式。 -->
+  <main class="case">
+    <div class="case-page-canvas" id="case-page-canvas">
+    <div class="case-layout">
+      <aside class="case-sidebar">
+        <div class="case-sidebar-inner">
+          <h1 class="case-title case-title-accent">Step Inside Tomorrow</h1>
+          <p class="case-tagline">Step inside the news.</p>
+          <p class="case-meta">AR/VR Interaction &mdash; 2025</p>
+          <p class="case-meta case-meta-award">Awarded Most Innovative AR/VR Concept</p>
+          <nav class="case-toc">
+            <a href="#overview">Overview</a>
+            <a href="#research">Research</a>
+            <a href="#experience">Experience</a>
+            <a href="#campaign">Campaign</a>
+          </nav>
+        </div>
+      </aside>
+
+      <div class="case-content">
+        <!-- ══ 01 OVERVIEW ══
+             从 Work 页点进来的 shared-element 落点：immersive room 主
+             视觉视频（和首页卡片同一文件）。这一屏刻意简单：大画面 +
+             短 overview，不塞 research -->
+        <section class="case-section" id="overview">
+          <div class="case-module case-module-hero" id="case-hero-media">
+            <video src="../assets/work/step-inside-tomorrow/hero.mp4" autoplay muted loop playsinline></video>
+          </div>
+          <div class="case-overview">
+            <!-- 只放一句浓缩的项目定位，不重复首页那段完整介绍：
+                 侧栏 slogan = Big Idea，这一句 = Project Positioning，
+                 首页 Work 卡片那段 = 完整解释，三层不互相重复 -->
+            <p class="case-caption">
+              Not a story you watch. A place you can enter, question, and
+              fast-forward.
+            </p>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- ══ 02 RESEARCH ══
+             原来的 The Opportunity 并进来了：核心问句就是这一段的开场，
+             不再另起一个 "Why immersive news, and why now?"（两个问句
+             重复）。这一段刻意不用 oversized headline、不写解释性正文，
+             是一段可以扫一眼看懂的视觉化摘要：
+               Target Audience → Data → Barrier → Insight
+             先交代对象，再摆证据，最后一行从人回到那个 design
+             opportunity；Experience 用 "Step inside the story."
+             作为对这个问句的回答
+             识别元素 = data cards + insight strip（Campaign 那边是
+             pills + images + captions），同一套玻璃材质和字体系统，
+             但信息结构不同，滚下来不会重复 -->
+        <section class="case-section" id="research">
+          <p class="case-kicker">Research</p>
+          <!-- 先交代对象：一行搞定，不做 persona 卡、不写长正文。
+               层级只靠 mono 标签 / 白色 600 / 次级透明度 -->
+          <div class="case-module case-module-no-reveal sit-audience">
+            <p class="sit-label">Target Audience</p>
+            <p class="sit-aud-main">Gen Z &middot; 18&ndash;26</p>
+            <p class="sit-aud-traits">
+              <span>Visual</span><span>Interactive</span><span>Social</span><span>Early adopters</span>
+            </p>
+          </div>
+          <!-- 三组数据横向排：这一段唯一的主视觉重点。承载它们的玻璃卡
+               压得很矮，只是给数字一个界面感的底，不是 dashboard -->
+          <div class="case-module case-module-no-reveal sit-stats">
+            <div class="sit-stat">
+              <p class="sit-stat-num">63%</p>
+              <p class="sit-stat-cap">have used AR</p>
+            </div>
+            <div class="sit-stat">
+              <p class="sit-stat-num">75%</p>
+              <p class="sit-stat-cap">have tried VR</p>
+            </div>
+            <div class="sit-stat">
+              <p class="sit-stat-num">47%</p>
+              <p class="sit-stat-cap">find VR fun</p>
+            </div>
+          </div>
+          <!-- 结论 strip：横向一条，主句白色，三个趋势用压暗的 CBS 蓝。
+               既收束了 presentation 的 Barrier of AR/VR，也给整段
+               research 一个明确结论 -->
+          <div class="case-module case-module-no-reveal sit-barrier">
+            <p class="sit-barrier-line">The barrier is getting smaller.</p>
+            <div class="sit-barrier-tags">
+              <span>Cost &darr;</span>
+              <span>Access &uarr;</span>
+              <span>Adoption &uarr;</span>
+            </div>
+          </div>
+          <!-- 整段 research 的落点：从数据回到人，再落到那个问句——
+               一整行说完，不加标签不加卡片。前半句次级透明度当铺垫，
+               后半句满亮度，是这一段真正要留下的那句话 -->
+          <div class="case-module case-module-no-reveal sit-insight">
+            <p class="sit-insight-line"><span class="sit-insight-lead">Watching is no longer enough.</span> What if the news became something you could experience?</p>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- ══ 03 EXPERIENCE ══
+             整个 case 最大、最重要的一段，也是唯一以视觉叙事为主的
+             一段：三个连续章节 EXPLORE → UNDERSTAND → PREDICT，每一
+             章的主体都是视频截图，文字只做 label 和引导，不再有大段
+             文字卡片。三章的版式各不相同（通栏 + 两张细节 / 大图 +
+             方形裁切的不对称 / 三格连续序列），滚下来不会重复。
+             媒体位都是带标签的占位块，等用户从视频里截图替换；章节
+             内部图与图之间是模板的 7px，章节之间才拉开呼吸。
+             第一章的开场由 js/case-step-inside-tomorrow.js 接在
+             Research 之后揭示，所以标了 no-reveal；后两章走模板的
+             通用滚动揭示 -->
+        <section class="case-section" id="experience">
+          <p class="case-kicker">Experience</p>
+
+          <!-- ── EXPLORE：通栏主视觉 + 两张细节 ── -->
+          <div class="case-module case-module-no-reveal sit-chapter" id="sit-exp-explore">
+            <p class="sit-label sit-ch-label"><span class="sit-ch-num">01</span>Explore</p>
+            <p class="sit-ch-line">Don&rsquo;t just watch. Take part.</p>
+            <img class="sit-ch-lead" src="../assets/work/step-inside-tomorrow/Explore1.jpg" alt="A living room where a 3D terrain map of the Bay Area floats above the coffee table, surrounded by news cards and a virtual anchor" loading="lazy" decoding="async" />
+            <div class="sit-ch-row-2">
+              <figure class="sit-ch-full">
+                <img src="../assets/work/step-inside-tomorrow/Explore2.jpg" alt="An election map spread across the floor, the viewer reaching in to touch a state while a timeline slider runs from 2025 to 2028" loading="lazy" decoding="async" />
+                <figcaption class="sit-ch-cap">Explore how today could shape the next election.</figcaption>
+              </figure>
+              <figure class="sit-ch-full">
+                <img src="../assets/work/step-inside-tomorrow/Explore3.jpg" alt="A globe showing heat data beside a live global chat room, with a slider running from 0 to 100 years" loading="lazy" decoding="async" />
+                <figcaption class="sit-ch-cap">See the impact. Join the conversation.</figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <!-- ── UNDERSTAND：一段通栏视频就够 ──
+               AI avatar 的对话是有声的，所以标题行末尾挂一个喇叭开关：
+               默认静音（页面里不该有声音自己响），用户点了才出声，
+               再点回到静音。交互在 js/case-step-inside-tomorrow.js -->
+          <div class="case-module sit-chapter">
+            <p class="sit-label sit-ch-label">
+              <span class="sit-ch-num">02</span>Understand
+              <button class="sit-sound" id="sit-avatar-sound" type="button" aria-label="Play with sound" title="Play with sound">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path class="sit-snd-body" d="M4.5 9.6v4.8h3.2l4.6 3.9V5.7L7.7 9.6z" />
+                  <path class="sit-snd-wave" d="M15.6 9.3a4.1 4.1 0 0 1 0 5.4M18 7.2a7.2 7.2 0 0 1 0 9.6" />
+                  <line class="sit-snd-slash" x1="15.2" y1="9.2" x2="20.4" y2="14.8" />
+                </svg>
+              </button>
+            </p>
+            <p class="sit-ch-line">Don&rsquo;t just hear the story. Ask your AI avatar.</p>
+            <video class="sit-ch-lead" id="sit-avatar-video" src="../assets/work/step-inside-tomorrow/avator.mp4" autoplay muted loop playsinline preload="metadata"></video>
+          </div>
+
+          <!-- ── PREDICT：整段 Experience 的差异点，视觉权重最高。
+                 两段视频各占一行、通栏满宽，说明落在各自画面的右下角 ── -->
+          <div class="case-module sit-chapter sit-chapter-key">
+            <p class="sit-label sit-ch-label"><span class="sit-ch-num">03</span>Predict</p>
+            <p class="sit-ch-line">Don&rsquo;t just follow the story. See what could happen next.</p>
+            <figure class="sit-ch-full">
+              <video src="../assets/work/step-inside-tomorrow/predict1.mp4" autoplay muted loop playsinline preload="metadata"></video>
+              <figcaption class="sit-ch-cap">Forecast what&rsquo;s coming.</figcaption>
+            </figure>
+            <figure class="sit-ch-full">
+              <video src="../assets/work/step-inside-tomorrow/predict2.mp4" autoplay muted loop playsinline preload="metadata"></video>
+              <figcaption class="sit-ch-cap">See how climate change reshapes our world.</figcaption>
+            </figure>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- ══ 04 CAMPAIGN ══
+             整个 case 的收尾（不再有 Final 总结段——项目应该以强视觉
+             结束，不是一段结论文字）。三块按传播路径推进：
+               城市里看到 → 手机上传播 → 现实中亲自体验
+             版式语言和 Experience 的三章完全一致（编号 + 名字 +
+             视觉 + 一句话），只是这里的句子排在图之后：图先说完，
+             句子收口。所有解释性正文都删了——图片已经说清楚的事，
+             文字不再重复一遍 -->
+        <section class="case-section" id="campaign">
+          <p class="case-kicker">Campaign</p>
+          <!-- ── 01 OUT OF HOME：广告自己说话，通栏铺满 ── -->
+          <div class="case-module sit-chapter">
+            <p class="sit-label sit-ch-label"><span class="sit-ch-num">01</span>Out of Home</p>
+            <figure class="sit-ch-full sit-ch-lead">
+              <img src="../assets/work/step-inside-tomorrow/add.jpg" alt="A three panel bus shelter light box: Tomorrow&rsquo;s easier when you prepare today, Tomorrow&rsquo;s the change you make today, Tomorrow&rsquo;s best game is how you play today, each signed Step inside tomorrow with the CBS mark" loading="lazy" decoding="async" />
+              <figcaption class="sit-ch-cap">See tomorrow before it happens.</figcaption>
+            </figure>
+          </div>
+
+          <!-- ── 02 SOCIAL：两台手机放大、一大一小错位 ── -->
+          <div class="case-module sit-chapter">
+            <p class="sit-label sit-ch-label"><span class="sit-ch-num">02</span>Social</p>
+            <div class="sit-social">
+              <img src="../assets/work/step-inside-tomorrow/Tik%20Tok2.png" alt="A TikTok post captioned When you&rsquo;re on the way to the CBS-VR watch party, showing someone laughing in a headset on the street" loading="lazy" decoding="async" />
+              <figure class="sit-ch-full">
+                <img src="../assets/work/step-inside-tomorrow/tiktok1.png" alt="A TikTok post captioned I look this happy because I checked the future forecast, five months ago, showing a hiker in a yellow jacket wearing a headset" loading="lazy" decoding="async" />
+                <figcaption class="sit-ch-cap">Tomorrow, in your feed.</figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <!-- ── 03 POP-UP：两张并排一行，说明落在各自画面右下角 ── -->
+          <div class="case-module sit-chapter">
+            <p class="sit-label sit-ch-label"><span class="sit-ch-num">03</span>Pop-up</p>
+            <div class="sit-ch-row-2">
+              <figure class="sit-ch-full">
+                <img class="sit-cmp-detail" src="../assets/work/step-inside-tomorrow/experience1.jpg" alt="A CBS branded pop-up tent on a campus lawn where a visitor in a headset works over a lit sandbox table while others wait their turn" loading="lazy" decoding="async" />
+                <figcaption class="sit-ch-cap">Future Planning Sandbox</figcaption>
+              </figure>
+              <figure class="sit-ch-full">
+                <img class="sit-cmp-detail" src="../assets/work/step-inside-tomorrow/experience2.jpg" alt="Four people in headsets seated inside a blue virtual newsroom, facing a CBS Evening News broadcast on the wall" loading="lazy" decoding="async" />
+                <figcaption class="sit-ch-cap">Anchor for a Day</figcaption>
+              </figure>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    </div>
+
+    <!-- 结尾退场的滚动行程（模板机制，和其它 case 页一致） -->
+    <div class="case-ending-spacer" id="ending-spacer" aria-hidden="true"></div>
+
+    <!-- Next Project + Contact：完全复用模板。按年份序（2025→2024）
+         Step Inside Tomorrow 的下一个是 SVP -->
+    <section class="case-ending" id="case-next">
+      <div class="case-ending-inner">
+        <div class="case-ending-row">
+          <div class="case-ending-col-main">
+            <div class="case-ending-next">
+            <span class="case-kicker case-ending-reveal">Next Up</span>
+            <a class="case-ending-next-link" href="svp.html">
+            <span class="case-ending-next-title case-ending-reveal">SVP</span>
+            <span class="case-ending-next-tagline case-ending-reveal">Keep your eyes on the road.</span>
+            </a>
+            </div>
+            <div class="case-ending-rule case-ending-reveal" aria-hidden="true"></div>
+            <div class="case-ending-contact case-ending-reveal">
+              <p class="case-ending-heading">Working on something?</p>
+              <p class="case-ending-sub">Tell me about it. I answer every message.</p>
+              <a class="case-ending-cta" href="mailto:yinzhaolei1113@gmail.com">GET IN TOUCH &#8599;</a>
+            </div>
+          </div>
+          <div class="case-ending-preview">
+            <a class="case-view-all case-ending-reveal" href="../index.html#work">[ VIEW ALL PROJECTS ]</a>
+            <a class="case-ending-preview-link" href="svp.html">
+              <div class="case-ending-preview-image">
+                <img src="../assets/work/svp/hero.jpg" alt="SVP" loading="lazy" decoding="async" />
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../vendor/gsap/gsap.min.js"></script>
+  <script src="../vendor/gsap/ScrollTrigger.min.js"></script>
+  <script src="../js/gsap-init.js"></script>
+  <script src="../js/site-chrome.js"></script>
+  <!-- 进场过渡第二段：morph 到 Hero 真实位置（放在 case.js 之前） -->
+  <script src="../js/case-enter.js"></script>
+  <script src="../js/case.js"></script>
+  <!-- Research 的读数动画（本页专属，不进共用模板） -->
+  <script src="../js/case-step-inside-tomorrow.js"></script>
+</body>
+</html>

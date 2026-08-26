@@ -1,0 +1,169 @@
+/* ──────────────────────────────────────────────
+   Hero 环境光背景
+   背景基础色与降级方案都在这里
+   ────────────────────────────────────────────── */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
+/* 整站统一的黑色摄影棚空间：页面基底与 Hero 同一个黑 */
+body {
+  min-height: 100%;
+  background: #0a0a0a;
+}
+
+/* ── 全局暗色环境层（深底 + WebGL 柔光，属于整个页面）──
+   过渡 = 柔光渐熄 + 极轻 Halftone 材质：遮罩只在过渡中挂载，
+   黑底穿孔后仍是黑（与 body 同色，不可见），只有光斑呈现
+   细微网点质感 —— 深色模式的 haoqi 材质语言 */
+.layer-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: #0a0a0a;
+}
+.layer-ambient.dissolving {
+  --bgR: 5.2px;
+  -webkit-mask-image: radial-gradient(circle, #000 var(--bgR), transparent calc(var(--bgR) + 0.6px));
+  -webkit-mask-size: 7px 7px;
+  mask-image: radial-gradient(circle, #000 var(--bgR), transparent calc(var(--bgR) + 0.6px));
+  mask-size: 7px 7px;
+}
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100svh;
+  /* 不裁切：娃娃机上下出血；背景由全局图层提供 */
+  overflow: visible;
+  background: transparent;
+}
+
+/* WebGL 柔光画布：暗色环境层的一部分（随该层一起被溶解遮罩处理） */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.8s ease;
+}
+
+/* B 键对比模式：回到纯黑 */
+.hero.bg-off .hero-bg {
+  opacity: 0;
+}
+
+/* ③ 娃娃机层：Hero 内部的独立视觉层——随 Hero 正常向上滚动，
+   绝不进入 About；退出 = 原地缩小 + 统一网点场溶解（无位移），
+   在 Hero 底部到达视口前融尽（js/hero-about.js 驱动） */
+.hero-machine {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+/* 机身比视口大、上下出血，具体装配见 css/hero.css 的 .machine-rig */
+
+/* 前景内容层（未来的标题 / 导航都放这层） */
+.hero-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+}
+
+
+/* ──────────────────────────────────────────────
+   WebGL 不可用时的静态降级：
+   多层偏移 radial-gradient 近似同一套光照布局
+   ────────────────────────────────────────────── */
+.hero.hero-bg-fallback {
+  background:
+    /* 右缘主光带（最亮，贴右边缘向上延伸） */
+    radial-gradient(40rem 70rem at 102% 66%, rgba(224, 233, 244, 0.13), transparent 62%),
+    radial-gradient(28rem 46rem at 100% 90%, rgba(224, 233, 244, 0.10), transparent 62%),
+    /* 中右斜光带 */
+    radial-gradient(34rem 58rem at 70% 88%, rgba(240, 240, 240, 0.09), transparent 62%),
+    radial-gradient(22rem 36rem at 66% 100%, rgba(240, 240, 240, 0.06), transparent 62%),
+    /* 左侧弱柔光 */
+    radial-gradient(48rem 44rem at 38% 82%, rgba(245, 240, 232, 0.05), transparent 65%),
+    radial-gradient(28rem 26rem at 40% 95%, rgba(245, 240, 232, 0.03), transparent 62%),
+    /* 基础明暗：顶部更深 */
+    linear-gradient(#0a0a0a, #0a0a0a);
+}
+.hero.hero-bg-fallback .hero-bg {
+  display: none;
+}
+
+/* ──────────────────────────────────────────────
+   调试面板（D 键开关）
+   ────────────────────────────────────────────── */
+.hero-bg-panel {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 9999;
+  width: 260px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 14px 16px;
+  background: rgba(12, 12, 12, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  backdrop-filter: blur(12px);
+  font-family: -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.75);
+  user-select: none;
+}
+.hero-bg-panel h4 {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 14px 0 6px;
+}
+.hero-bg-panel h4:first-child {
+  margin-top: 0;
+}
+.hero-bg-panel label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 5px 0;
+}
+.hero-bg-panel label span {
+  flex: 0 0 86px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hero-bg-panel input[type="range"] {
+  flex: 1;
+  accent-color: #888;
+}
+.hero-bg-panel output {
+  flex: 0 0 34px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.5);
+}
+.hero-bg-panel .panel-toggle {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

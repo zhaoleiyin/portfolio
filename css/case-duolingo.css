@@ -1,0 +1,1008 @@
+/* ══════════════════════════════════════════════════
+   Duolingo Case Study 专属样式——只服务这一个 case，不进
+   css/case.css 那份跨 case 共用的模板文件。
+
+   这里的强调色是这个项目自己在 Figma 里建立的 Color Palette
+   （不是 Duolingo 官方品牌色，也不应该被其它 case 复用）：
+     Green  #58CC02
+     Yellow #FFC800
+     Orange #F39829
+     Red    #EB4233
+     Purple #CE82FF
+     Blue   #1CB0F6
+   目前 Research section 和侧栏项目标题（.case-title-accent）用到。
+
+   目前 5 个 finding 用 .case-placeholder 占位（真实图片还没给到），
+   之后把每个 .case-finding-media 里的 .case-placeholder 换成
+   <img src="../assets/work/duolingo/research-0X.jpg" alt="" /> 即可，
+   下面 .case-finding-media img 的 object-fit: contain 已经写好了，
+   不需要再改样式——图片保持自己原始比例，不裁切。
+   ══════════════════════════════════════════════════ */
+
+/* 全篇正文字号统一：整个 case 内容区里，除了每个 section 自己的
+   大标题（pull-quote/heading 这一类），其余正文/说明文字全部固定
+   成同一个 15px，不再各自用不同的 responsive clamp 分别算一个
+   数字——那样虽然每处看起来都"合理"，但拼在一起就是到处不一样大。
+   用 .case-content 限定，只影响这个模板的内容列，不动侧栏标题/
+   导航/底部这些结构性文字，也不碰 case.css 里 .case-caption 的
+   默认值（其它 case 页面不受影响）。
+   这条规则统一处理：Overview/Research/Persona 的说明段落
+   （它们都带 .case-caption），下面几条再单独处理不用 .case-caption
+   的正文（finding 标题/说明、persona 三栏、ideation 每张 slide 的
+   名字、Type token 的字体展示） */
+.case-content .case-caption {
+  font-size: 15px;
+}
+.case-finding-title,
+.case-finding-desc,
+.case-persona-card-label,
+.case-persona-card-text,
+.case-ideation-label,
+.case-visual-type-value,
+.case-visual-type-specimen {
+  font-size: 15px;
+}
+
+/* 侧栏项目标题：用这个项目自己的 Palette Green，不改 case.css 里
+   .case-title 的通用样式（字号/字重/行高都不变，其它 case 的标题
+   不受影响） */
+.case-title-accent {
+  color: #58cc02;
+}
+
+/* Large Statement：改成横向展开的 editorial headline，不用
+   case.css 里给其它 section 大字块用的窄栏宽度（26em）——只在
+   Research 这一处覆盖，用 #research 限定，不影响其它 section。
+   字号缩到 case.css 默认 .case-pull-quote 的约 72%——Research 的
+   主角是下面的 Key Findings 插画，headline 只是一句 concise
+   insight，不该是整个 section 视觉权重最高的元素。绿色第二句依然
+   用颜色做 emphasis（见下面 .case-pull-quote-b），但不再额外靠
+   超大字号强调 */
+#research .case-module-typography {
+  max-width: none;
+}
+/* 不再用大字号制造 headline 的存在感——白色正文 + 绿色高亮句本身
+   已经足够形成重点，字号统一回下面 Research 正文用的同一个 15px */
+/* 大字全篇统一 15px（原来只钉了 #research，Visual System 的
+   "Friendly by design." 漏在外面还是 37px）——现在和其余三个 case
+   同一条规则 */
+.case-content .case-pull-quote {
+  font-size: 15px;
+}
+#research .case-pull-quote-b {
+  color: #58cc02; /* Duolingo Project Palette · Green */
+}
+
+/* Intro 这句话本身不算太短，case.css 里 .case-caption 的默认
+   42em 宽度会在宽屏上把它拆成两行——去掉这个上限，让它跟着
+   .case-content 的实际列宽走，视口够宽时能落在一行；字号不变，
+   只是给它更多可用宽度。opacity 降到支撑性文字的量级——
+   RESEARCH label → 精简 insight headline → supporting text →
+   下面的 Key Findings 插画才是这个 section 真正的主视觉 */
+.case-research-intro {
+  max-width: none;
+  /* 复用 case.css 里的统一次级文字透明度，不再单独写数字 */
+  opacity: var(--case-text-secondary-opacity);
+}
+
+/* Key Findings：从两排堆叠改成一条紧凑的横向 media strip——桌面端
+   一次看到 3 张，04/05 只能靠两侧小箭头切换（联动逻辑在
+   case-duolingo.js 里）。strip 本身是固定视口（overflow:hidden，
+   不响应任何滚轮/trackpad/拖拽/原生横向滚动手势），真正承载 5 张
+   卡片、被 JS 整体 translateX 平移的是里面的 .case-findings-track——
+   这样"只能靠箭头切换"是结构性保证，不是靠拦截事件做到的。每张
+   卡片是固定宽度的等分槽位（保证"一次 3 张"这个数量关系稳定），
+   图片用 object-fit:contain 完整显示在槽位里，不裁切、不拉伸 */
+.case-findings {
+  display: flex;
+  flex-direction: column;
+}
+.case-findings-wrap {
+  position: relative;
+}
+.case-findings-strip {
+  overflow: hidden;
+}
+.case-findings-track {
+  display: flex;
+  gap: var(--case-gap);
+  transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+}
+/* 桌面端一次 3 张：槽位宽度按内容区宽度三等分（减去两条 gap），
+   槽位内的图片再各自按原始比例 contain，不强行拉伸/裁切 */
+.case-finding {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 0 0 calc((100% - 2 * var(--case-gap)) / 3);
+}
+/* 背景色和插画本身的画布色（#111111）完全一致，不用比插画更亮/
+   更暗的灰——插画和容器之间不应该出现看得出来的矩形边界 */
+.case-finding-media {
+  position: relative;
+  background: #111111;
+  width: 100%;
+  height: 140px;
+}
+.case-finding-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none; /* 图片本身不响应拖拽手势/右键另存，交互统一交给外层 strip 处理 */
+}
+.case-finding-media .case-placeholder {
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+}
+
+/* 横向滚动的两个小箭头：圆形 outline + 简单箭头，颜色用项目自己的
+   palette（黄/蓝），默认透明底、hover 才填色，保持"小而轻"，不做成
+   实心按钮或明显的 carousel 控件。左右两个箭头各自根据
+   "还能不能往那个方向滚"由 JS 加/去 .is-visible，不能滚的方向直接
+   隐藏，不用 disabled 的灰态样式 */
+.case-findings-arrow {
+  position: absolute;
+  top: 70px; /* 图片高度一半，垂直居中对齐插画 */
+  left: 6px;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--arrow-accent);
+  background: rgba(10, 10, 10, 0.7);
+  color: var(--arrow-accent);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, background 0.25s ease, color 0.25s ease;
+}
+.case-findings-arrow.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.case-findings-arrow:hover {
+  background: var(--arrow-accent);
+  color: #0a0a0a;
+}
+.case-findings-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+.case-findings-arrow-next {
+  left: auto;
+  right: 6px;
+}
+
+/* 槽位现在是固定宽度（三等分），figcaption 直接跟随槽位宽度即可，
+   不再需要之前"图片自身宽高比决定容器宽度"那套 width:0 技巧 */
+.case-finding figcaption {
+  width: 100%;
+}
+.case-finding-title {
+  margin-top: var(--case-gap);
+  /* font-size 统一在文件顶部的全篇正文字号规则里 */
+  font-weight: 500;
+  color: var(--finding-accent);
+}
+/* Description 不用彩色，保持站内正文一贯的白/浅灰 */
+.case-finding-desc {
+  margin-top: var(--case-gap);
+  line-height: 1.45;
+  /* 比标题淡一档——Research 这一层是 Level 2，标题保留强调色，
+     description 降级成辅助说明，不跟标题抢视觉 */
+  color: #7d7d78;
+}
+
+/* "Key Findings" 这类二级小标题：比 section 顶部的 kicker（比如
+   "Research"）再淡一档，明确它是从属于上面 pull-quote 的次级标签，
+   不是同一层级的另一个入口 */
+.case-kicker-faint {
+  opacity: 0.6;
+}
+
+
+/* ── Persona：参考用户提供的 persona 参考图排版——左侧文字列
+   （约 57%：kicker + 大标题 + 介绍段落 + Goals/Needs/Pain Points
+   三栏)，右侧人像+装饰图形（约 43%）。
+   只借用户参考图的信息层级/构图比例，颜色/图形语言仍然是本页
+   已经在用的 Duolingo Project Color Palette，不是参考图本身的
+   颜色，也不是 Duolingo 官方色 ── */
+.case-persona {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  column-gap: 4vw;
+  /* center 而不是 start：人物视觉高度和左侧文字列（intro + 三栏）
+     的高度不完全相等时，两栏按共同的垂直中心对齐，人物不会明显
+     偏上或偏下 */
+  align-items: center;
+}
+.case-persona-text {
+  grid-column: 1;
+  grid-row: 1;
+}
+/* 这里不用 case.css 里 .case-kicker/.case-caption 的相邻选择器
+   间距系统（那套是给纵向单栏内容设计的）——Persona 左栏自己是个
+   独立的小 composition，间距单独、显式地写在这里 */
+.case-persona-text > .case-kicker {
+  margin: 0;
+}
+/* "Meet Akemi." 缩小到大约原来的 70–75%（clamp 上下限和 vw 系数都
+   按同一个比例缩），视觉权重不再接近 Hero title——第一眼应该先
+   读到"这是 Akemi"，然后很快扫到三栏和右侧人物，不是被一个巨大
+   标题占满。只在这里覆盖，不改 case.css 里其它 section 共用的
+   .case-pull-quote 默认字号 */
+/* 不再靠大字号当"标题"——字号统一回内容正文的 15px，靠更高的
+   font-weight（保留原本就有的 700）撑出它是这个 section 的标题，
+   绿色句号颜色不变 */
+.case-persona-heading {
+  margin-top: var(--case-gap);
+  max-width: none;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.case-persona-heading-dot {
+  color: var(--accent);
+}
+/* Bio 段落降到支撑性信息——Goals/Needs/Pain Points 才是这个
+   section 真正的内容，Akemi 是谁只需要一眼扫过，不需要认真读完 */
+.case-persona-intro {
+  margin-top: var(--case-gap);
+  max-width: none;
+  /* 字号回到 .case-caption 默认大小，不再额外调小——只靠 opacity
+     建立层级，字太小会影响可读性 */
+  line-height: 1.5; /* 比 .case-caption 默认的 1.6 收紧一点 */
+  /* 同上，统一走 case.css 里那个变量 */
+  opacity: var(--case-text-secondary-opacity);
+}
+
+/* 三栏整体上移、内部也更紧凑——图标→标题、标题→下划线、
+   下划线→正文的间距都缩小，正文 line-height 也收紧，让左栏的
+   总高度大致对应右侧人物的高度，而不是继续往下延伸。intro 降级
+   之后，这里的间距也收紧，让三栏更快进入视线 */
+.case-persona-cards {
+  margin-top: var(--case-gap);
+  display: flex;
+  gap: var(--case-gap);
+}
+/* 不做成有底色的卡片——用一条竖向细线分隔三栏，呼应参考图里更
+   开放、不是 SaaS dashboard card 的排法 */
+.case-persona-card {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-left: 22px;
+  border-left: 1px solid #222220;
+}
+.case-persona-card:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+.case-persona-card-icon {
+  display: block;
+  width: 26px;
+  height: 26px;
+  color: var(--accent);
+}
+.case-persona-card-label {
+  display: inline-block;
+  margin-top: var(--case-gap);
+  padding-bottom: 3px;
+  border-bottom: 2px solid var(--accent);
+  font-family: var(--font-sans, "Geist", sans-serif);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+}
+.case-persona-card-text {
+  margin-top: var(--case-gap);
+  line-height: 1.42;
+  color: #c8c8c2;
+}
+
+/* 右侧人物视觉区：人物是唯一的主体，所有图形只是她身后/身边的
+   framing system，不是"人物+六个随机散落的图形"。层叠关系
+   （从下到上）：橙色胶囊 → 绿色大圆（压住胶囊，只露一个角）→
+   紫色弧线/蓝色拱门/红色形状/蓝色圆环（贴着人物轮廓摆，会被人物
+   身体压住一部分）→ 人物本身（最上层，把前面的图形都压住大半）→
+   一颗小 sparkle（叠在人物/笔记本上，当成贴纸用，不摆在空白处）。
+   容器整体占右侧栏宽度的 60%（原来是 82%）。缩小的原因：人物是一张
+   高饱和插画，按 82% 排时正好从这一行的顶端一直顶到底端，视觉重量
+   压过了左侧的文字内容——而这一段的主角应该是"Akemi 是谁"这段文字。
+
+   60% 这个值是按两端视口都验证过的：窄一些的视口（1280）左栏文字
+   会多折几行、块更高，人物本来就不会顶满；真正的临界点在宽视口
+   （1600）——文字折行变少、块高只有 251px，而人物按 66% 排是 266px，
+   仍然比文字高、仍然顶到底。收到 60% 之后人物在 1600 下约 240px，
+   比文字块矮，上下各留出一段黑；配合 .case-persona 的
+   align-items:center，人物是浮在这一行中间、而不是撑满它。
+   背后那组图形（绿色大圆等）全部是按容器百分比定位的，所以跟着
+   一起等比缩小，构图关系不变，绿色背景照常保留。
+   左右 margin:auto 居中，不贴着导航 ── */
+.case-persona-visual {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  width: 60%;
+  margin: 0 auto;
+  /* 跟着真实素材（人物.png，1312×1199）自己的原始比例走，不是随手
+     猜一个比例——这样图片不会被裁切，也不会在框里留出大片空白 */
+  aspect-ratio: 1312 / 1199;
+}
+.case-persona-visual img {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* 保持原始比例，不裁切 */
+}
+.case-persona-shape {
+  position: absolute;
+  z-index: 1;
+}
+/* 绿色大圆：主要的背景形状，压在人物头肩后面，摆在人物所在的中上
+   区域——大部分会被人物本身盖住，只在轮廓边缘露出，不是完整独立
+   悬空的一个圆 */
+.case-persona-shape-circle {
+  z-index: 0;
+  width: 60%;
+  height: 48%;
+  top: 2%;
+  left: 18%;
+  border-radius: 50%;
+  background: #58cc02;
+}
+/* 橙色胶囊：躲在绿色圆后面（层级更低，且比绿色圆先出现在 DOM
+   里），只在绿色圆右上角露一点边，形成一个 diagonal accent，
+   不是自己单独摆在空白处 */
+.case-persona-shape-pill {
+  z-index: -1;
+  width: 28%;
+  height: 9%;
+  top: 2%;
+  left: 42%;
+  border-radius: 999px;
+  background: #f39829;
+  transform: rotate(-18deg);
+}
+/* 紫色弧线：贴着绿色圆的右上角，是同一组构图的一部分 */
+.case-persona-shape-arc {
+  width: 16%;
+  height: 16%;
+  top: 6%;
+  left: 62%;
+  border-radius: 50%;
+  border: 3px solid #ce82ff;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  transform: rotate(25deg);
+}
+/* 蓝色拱门：人物身体右侧中下方，会被人物压住一部分，不是孤零零
+   悬在最右边 */
+.case-persona-shape-arch {
+  width: 15%;
+  height: 25%;
+  top: 46%;
+  left: 64%;
+  background: #1cb0f6;
+  border-radius: 999px 999px 0 0;
+}
+/* 红色形状：人物右下方，被人物压住约一半 */
+.case-persona-shape-half {
+  width: 20%;
+  height: 9%;
+  bottom: 10%;
+  left: 56%;
+  background: #eb4233;
+  border-radius: 999px 999px 0 0;
+}
+/* 蓝色小圆环：人物下方的一个很小的 accent */
+.case-persona-shape-ring {
+  width: 9%;
+  height: 7%;
+  bottom: 2%;
+  left: 38%;
+  border-radius: 50%;
+  border: 3px solid #1cb0f6;
+}
+/* Sparkle：唯一保留的一个，叠在人物/笔记本附近，当贴纸用，
+   不再有散落在空白区域的黄色星星 */
+.case-persona-sparkle {
+  position: absolute;
+  z-index: 3;
+  width: 18px;
+  height: 18px;
+  top: 58%;
+  left: 46%;
+  fill: #ffc800;
+}
+
+/* ── Ideation：视觉内容是主体，文字只负责建立层级和导航。01
+   Brainstorm → 02 User Flow → 03 Early Wireframes 共享同一块
+   展示区，点 01/02/03 直接跳转（不再靠箭头），横向 slide 过渡
+   （逻辑在 case-duolingo.js）。Header 只是 section introduction，
+   字号收到原来的约 70%；Simple/Social/Playful 删掉了——Brainstorm
+   图里已经画出来了，这里不重复说一遍。Brainstorm/User Flow 依然是
+   纯 SVG 手绘的，Wireframes 依然是用户提供的真实素材，这里只重排
+   容器 ── */
+.case-ideation-header {
+  display: flex;
+  flex-direction: column;
+}
+/* 原来 clamp(18px,2vw,26px) 的约 70%：只是 section 的一句引子，
+   不该跟下面的视觉内容抢注意力 */
+/* 同样统一到内容正文的 15px——这句话本来就已经是灰色的支撑性
+   introduction，不是需要放大的 headline */
+.case-ideation-headline {
+  margin-top: var(--case-gap);
+  max-width: none;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: #9a9a94;
+}
+
+/* Final Design 到这里已经不需要再解释——连轻量的一句 headline 都
+   删掉了，kicker 后面直接是六屏 UI 图本身，作品自己说话 */
+
+.case-ideation-slider {
+  position: relative;
+  margin-top: var(--case-gap);
+}
+.case-ideation-viewport {
+  overflow: hidden;
+}
+.case-ideation-track {
+  display: flex;
+  width: 100%;
+  transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.case-ideation-slide {
+  flex: 0 0 100%;
+  min-width: 0;
+}
+/* 每张 slide 只用一个名字（Brainstorm/User Flow/Early Wireframes）
+   ——底部 01/02/03 已经指明了序号，这里不重复编号或加副标题。颜色
+   跟随这张 slide 自己的 accent，和底部对应页码天然是同一个颜色 */
+.case-ideation-label {
+  font-family: var(--font-sans, "Geist", sans-serif);
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* 每张 slide 的展示区：diagram/wireframes 都在这里居中，尽量利用
+   整块展示区的宽度——不是缩在窄栏里的小插图 */
+.case-ideation-slide-media {
+  margin-top: var(--case-gap);
+  display: flex;
+  justify-content: center;
+}
+/* 01/02 手绘图：直接画在页面黑色背景上，不用深色矩形 card 包裹
+   （没有 fill/border/padding 的"卡片感"）。SVG 自带 viewBox，宽而
+   不高，随容器宽度等比缩放。周围说明文字已经删掉大半（不再有
+   index/title/sub 三段式标签、不再有箭头占位），把空出来的空间也
+   让给图本身，横向放大到展示区的 97% */
+.case-ideation-diagram {
+  display: block;
+  width: min(97%, 920px);
+  height: auto;
+}
+
+/* 03 Shape：4 张真实 wireframe 原样并排展示，统一显示高度（保持
+   各自原始宽高比，用 object-fit:contain，不裁切、不改图片内容），
+   一次看全 4 张，横向铺开、水平居中，不再往下面延伸 */
+.case-ideation-wireframes {
+  width: 100%;
+  gap: var(--case-gap);
+  justify-content: center;
+}
+.case-ideation-wireframes img {
+  display: block;
+  height: 240px;
+  width: auto;
+  object-fit: contain;
+  background: #141414;
+}
+/* Wireframes 这一页下面那句极短的说明，字号/颜色都比正文更轻，
+   不抢手机截图的视觉重量 */
+.case-ideation-wireframes-caption {
+  margin-top: var(--case-gap);
+  max-width: none;
+  text-align: center;
+  /* font-size 统一在文件顶部的全篇正文字号规则里（.case-content
+     .case-caption），这里只覆盖 case.css 默认给不了的部分 */
+  color: #6a6a64;
+}
+
+/* 底部 01/02/03：真正的 slideshow navigation（不再是被动的进度
+   提示），点哪个就跳到哪张 slide。当前页用它自己的 accent color
+   高亮，其余两个降到低 opacity——用 opacity 而不是纯改颜色，
+   hover 时能有一个自然的"亮起来"过渡 */
+.case-ideation-pager {
+  margin-top: var(--case-gap);
+  display: flex;
+  justify-content: center;
+  gap: var(--case-gap);
+}
+.case-ideation-pager-item {
+  padding: 4px;
+  border: none;
+  background: none;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  opacity: 0.4;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+.case-ideation-pager-item:hover {
+  opacity: 0.7;
+}
+.case-ideation-pager-item.is-active {
+  opacity: 1;
+}
+
+@media (max-width: 900px) {
+  .case-ideation-wireframes {
+    flex-wrap: wrap;
+  }
+  .case-ideation-wireframes img {
+    height: 200px;
+  }
+}
+
+/* ── Visual System：视觉为主，不做完整 brand guideline——顶部只有
+   kicker + 一行 headline，不再重复解释"为什么这样设计"（Color 和
+   Elements 本身已经说明了）。下面是一分为二结构：左边 Design
+   Tokens（Color + Type），右边 Visual Language（Elements）。左右
+   50/50，用 grid 的默认 stretch 让两栏顶部/底部都对齐，不画任何
+   可见分隔线。
+
+   统一间距系统——整个 section 只用这一套 token，不再各处手动
+   margin 各写各的数字：
+     --vs-gap-xs:  8px   同一组内最小的间隔（色块→HEX，字体名→sample）
+     --vs-gap-sm: 16px   label → 它下面的实际内容，处处一致
+     --vs-gap-md: 24px   Color 和 Type 这两个块之间
+     --vs-gap-lg: 48px   左右两栏之间 ── */
+.case-visual-composition {
+  /* 这四档原本是 8/16/24/48，现在全部指向唯一的 --case-gap；
+     变量名保留，下面几十处引用不用逐个改写 */
+  --vs-gap-xs: var(--case-gap);
+  --vs-gap-sm: var(--case-gap);
+  --vs-gap-md: var(--case-gap);
+  --vs-gap-lg: var(--case-gap);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: var(--vs-gap-lg);
+  align-items: stretch;
+}
+
+/* Color/Type/Elements 三个 label 共用同一个类：字号、颜色都统一，
+   且都是自己所在容器的第一个子元素——配合 .case-visual-composition
+   的 grid stretch（两栏顶部天然对齐），COLOR 和 ELEMENTS 这两个
+   label 永远落在同一条水平线上 */
+.case-visual-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6a6a64;
+}
+
+/* 左栏：Color 钉在栏顶、Type 钉在栏底（space-between）——右栏
+   Elements 通过 grid stretch 决定整行高度，左栏靠这一条同时做到
+   "顶部对齐 + 底部对齐"，Color 和 Type 之间的留白吸收高度差 */
+.case-visual-tokens {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--vs-gap-md);
+}
+.case-visual-tokens-row {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Color：3×2 网格铺得更开——行列 gap 放大、整体占位更宽，
+   左上角不再挤成一小团（这里的间距刻意脱离 --case-gap=7px 的
+   全局紧凑 token，色板需要自己的呼吸感） */
+.case-visual-swatches {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 26px 40px;
+  max-width: 340px;
+}
+.case-visual-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--vs-gap-xs);
+}
+.case-visual-swatch-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+.case-visual-swatch-hex {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: #9a9a94;
+}
+
+/* Type：项目 UI 实际用的字体（Courier），不是这个网站自己的字体
+   系统——两者是两回事，不能互相替代 */
+.case-visual-type-block {
+  margin-top: var(--vs-gap-sm);
+}
+.case-visual-type-value {
+  font-family: "Courier New", Courier, monospace;
+  font-weight: 700;
+  color: #f2f2f2;
+}
+.case-visual-type-specimen {
+  margin-top: var(--vs-gap-xs);
+  font-family: "Courier New", Courier, monospace;
+  color: #c8c8c2;
+  letter-spacing: 0.02em;
+}
+
+/* 右栏：Elements 是这一栏唯一内容，一般由它决定整行高度（左栏
+   靠 space-between 跟上）；label→内容的间距用同一个 --vs-gap-sm，
+   和左边 Color/Type 保持一致 */
+.case-visual-elements {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+/* 图形组底边贴栏底（flex-end）：万一左栏比右栏高，svg 的底边
+   仍然和左栏 Type 的底边落在同一条线上；水平方向 flex-start——
+   graphic 的最左边跟上面 "ELEMENTS" label 的左边缘对齐，和左栏
+   Color/Type 共用同一条网格线 */
+.case-visual-elements-media {
+  flex: 1;
+  margin-top: var(--vs-gap-sm);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+/* elements.svg 原稿是 597×316 的横构图，铺满右栏宽度；高度由
+   宽高比自然得出，和左栏 Color+Type 的量级接近 */
+.case-visual-shapes {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Final Design 只用用户提供的这一张 final ui.png（六屏横向拼接，
+   自带透明背景），不加任何容器背景色/边框——直接露出页面黑底，
+   图片多宽就多宽，不裁切、不强制比例 */
+.case-final-design-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Campaign：c1（横幅实拍）+ c3（手持实拍视频）左右并排、同一高度。
+   不加文字、不加容器背景/边框——素材原始比例，宽高多少就是多少，
+   不裁切 */
+.case-campaign-row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--case-gap);
+}
+.case-campaign-row .case-campaign-media {
+  flex: 0 1 auto;
+  height: 480px;
+  min-width: 0;
+}
+.case-campaign-row .case-campaign-media img,
+.case-campaign-row .case-campaign-media video {
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+}
+.case-campaign-media img,
+.case-campaign-media video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 轻量 prototype 入口：纯文字 link，不做大卡片/大 placeholder，
+   hover 用 Duolingo green 呼应全站 accent 语言。
+   位置在 Final Design 整组的右下角——6 张手机图那一行之下、右对齐到
+   最后一张手机的右缘（也就是内容列右边缘）。
+   用 width:fit-content + margin-left:auto 而不是给它一个满宽的块再
+   靠右：这样 link 的点击/hover 区域仍然只有文字本身那么大，不会变成
+   一条横跨整个内容列的隐形热区。
+   到上方图片的距离走统一的 --case-gap */
+.case-final-design-proto {
+  margin-top: var(--case-gap);
+  margin-left: auto;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: var(--case-gap);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  /* 权重和亮度都对齐 section 标题（.case-kicker：常规字重 + #8c8c86）——
+     它是辅助入口，不该比 "Final Design" 这个标题本身更亮更重。
+     之前的 700 + 纯白让它成了整组里最抢眼的东西 */
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #8c8c86;
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+/* hover 才亮起来：过渡到全站的白（不再用绿色，绿色 hover 让它在
+   静止时就吸引人去找） */
+.case-final-design-proto:hover {
+  color: #f2f2f2;
+}
+
+/* ── Experience：video-led scrollytelling。视频是这一屏唯一的视觉
+   主体，居中持续播放；01–05 的字幕一次只显示一条，叠在视频自身
+   两侧的留白画布上（不再额外占布局宽度），贴近手机主体交替出现，
+   不常驻堆叠，避免变成一张 User Flow 列表。桌面端由
+   case-duolingo.js 把 .case-experience-sticky pin 在原位，同一个
+   ScrollTrigger 的 progress 既驱动 video.currentTime 也驱动当前
+   字幕的显隐 */
+.case-experience-sticky {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 高度由内容（视频本身）决定，不再用 88vh 撑出上下大片空白——
+     只留一点呼吸感 padding */
+  padding: 32px 0;
+}
+
+/* 视频本体是 16:9 的横向素材：手机样机只占中间一小段宽度，两侧是
+   视频自带的留白画布（不是我们加的背景）。不裁切、不放大、不额外
+   加背景/边框——容器直接按视频原始比例走，宽度吃内容区的 84%左右，
+   让手机成为这一屏最明显的主体（比 62% 那版再放大约三分之一） */
+.case-experience-video {
+  position: relative;
+  flex: 0 0 auto;
+  width: min(84%, 780px);
+  aspect-ratio: 16 / 9;
+}
+.case-experience-video video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* 左右两个字幕槽位：绝对定位叠在视频自己的留白区域上，但不能只按
+   "距离容器中心多少 px" 算——手机主体本身在中心就占了将近容器
+   宽度的 24%（半宽约 12%），之前只留 70px 会直接切进手机轮廓里。
+   这里把"手机半宽"和"手机边缘到文字的间距"分开算：
+   50% ± (12% 手机半宽估算 + 80px 间距)，保证文字块的内侧边缘
+   始终在手机轮廓外面，不会压在 UI 上 */
+.case-experience-caption {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(180px, 16vw, 240px);
+}
+.case-experience-caption-left {
+  right: calc(62% + 80px);
+  text-align: right;
+}
+.case-experience-caption-right {
+  left: calc(62% + 80px);
+  text-align: left;
+}
+
+/* 同一侧的多条字幕（比如左侧的 01/03/05）叠在同一个位置上，靠
+   opacity 切换谁可见，不占用额外的纵向排列空间。--shift-x 是给
+   individual step 的额外水平偏移量，默认 0，01/02 单独加大偏移量
+   （见下方 [data-index] 覆盖）——因为这两步对应的视频片段镜头拉得
+   很近、UI 几乎填满整个画面，比其余几步需要更大的安全距离才不会
+   压在画面内容上 */
+.case-experience-step {
+  --shift-x: 0px;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(var(--shift-x)) translateY(8px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+.case-experience-caption-left .case-experience-step {
+  align-items: flex-end;
+}
+.case-experience-caption-right .case-experience-step {
+  align-items: flex-start;
+}
+.case-experience-step[data-index="0"] {
+  --shift-x: -80px;
+}
+.case-experience-step[data-index="1"] {
+  --shift-x: 80px;
+}
+.case-experience-step.is-active {
+  opacity: 1;
+  transform: translateX(var(--shift-x)) translateY(0);
+}
+
+/* 只作为视频的辅助说明，不抢手机主体：数字最小，标题稍大，
+   description 更小更淡；三者之间留出明确的呼吸间距，不要挤在一起。
+   当前步骤始终是 accent 色数字 + 白色标题（没有常驻的"未激活"
+   状态要区分） */
+.case-experience-step-index {
+  display: block;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+.case-experience-step-title {
+  margin-top: var(--case-gap);
+  font-family: var(--font-sans, "Geist", sans-serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: #f2f2f2;
+}
+/* 字号跟标题一样统一成 15px，靠更低的 opacity（而不是缩小字号）
+   继续保持克制——视频依然是主角，这条说明只是辅助 */
+.case-experience-step-desc {
+  margin-top: var(--case-gap);
+  font-size: 15px;
+  line-height: 1.45;
+  color: #9a9a94;
+  opacity: 0.7;
+}
+
+@media (max-width: 900px) {
+  .case-campaign-row {
+    flex-direction: column;
+  }
+  .case-campaign-row .case-campaign-media {
+    height: auto;
+    width: 100%;
+  }
+  .case-campaign-row .case-campaign-media img,
+  .case-campaign-row .case-campaign-media video {
+    width: 100%;
+    height: auto;
+  }
+
+  /* 窄屏继续保持横向滚动 strip（触屏原生 swipe 已经很顺手，不需要
+     案头端那套滚轮/拖拽 JS），槽位改成"一张主体 + 露一点下一张"，
+     提示还能继续横滑，而不是桌面端严格的三等分 */
+  .case-finding {
+    flex-basis: 78%;
+  }
+  .case-finding-media {
+    height: 180px;
+  }
+  .case-findings-arrow {
+    top: 90px; /* 移动端图片高度一半 */
+  }
+
+  .case-persona {
+    display: block;
+  }
+  .case-persona-visual {
+    width: 100%;
+    margin-top: var(--case-gap);
+    max-width: 320px;
+  }
+  .case-persona-cards {
+    flex-direction: column;
+    gap: var(--case-gap);
+  }
+  .case-persona-card {
+    padding-left: 0;
+    border-left: none;
+    border-top: 1px solid #222220;
+    padding-top: 16px;
+  }
+  .case-persona-card:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  /* 窄屏改单列纵向堆叠：Color → Type → Elements 依次往下，不再
+     需要 grid stretch 撑等高 */
+  .case-visual-composition {
+    display: block;
+  }
+  .case-visual-tokens {
+    display: block;
+  }
+  .case-visual-tokens-row + .case-visual-tokens-row {
+    margin-top: var(--vs-gap-md, 24px);
+  }
+  .case-visual-elements {
+    margin-top: var(--vs-gap-md, 24px);
+  }
+  .case-visual-elements-media {
+    margin-top: var(--vs-gap-sm, 16px);
+  }
+  .case-visual-shapes {
+    width: 100%;
+  }
+  .case-visual-swatches {
+    gap: var(--vs-gap-sm, 16px);
+    max-width: none;
+  }
+  .case-visual-swatch-circle {
+    width: 48px;
+    height: 48px;
+  }
+
+  /* 移动端不做 sticky/叠加/左右交替：视频在上，五条步骤按 01→05
+     纵向堆叠在下面，随滚动逐条 fade+y 进场（由 case-duolingo.js
+     驱动）。桌面端字幕是叠在 .case-experience-video 内部的绝对定位
+     层，移动端要让它们"退出"视频、变成视频下方的正常文档流——
+     .case-experience-video 自己变成纵向 flex 容器，<video> 是
+     order:0 的第一个子项，两个 .case-experience-caption 容器用
+     display:contents"消失"，让里面的 .case-experience-step 直接
+     成为 .case-experience-video 的 flex 子项，靠内联的 order（在
+     HTML 里按 01–05 写好）排回正确顺序，不用调整 DOM 结构 */
+  .case-experience-sticky {
+    display: block;
+    min-height: 0;
+  }
+  .case-experience-video {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: static;
+    width: 100%;
+    max-width: 320px;
+    aspect-ratio: auto;
+    margin: 0 auto;
+  }
+  .case-experience-video video {
+    order: 0;
+    height: auto;
+  }
+  .case-experience-caption-left,
+  .case-experience-caption-right {
+    display: contents;
+  }
+  .case-experience-step {
+    position: static;
+    inset: auto;
+    top: auto;
+    transform: none;
+    width: 100%;
+    max-width: 420px;
+    margin-top: var(--case-gap);
+    opacity: 1;
+    pointer-events: auto;
+    text-align: center;
+    align-items: center !important;
+  }
+  .case-experience-step-desc {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .case-finding-media img {
+    transition: none;
+  }
+}

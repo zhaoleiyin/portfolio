@@ -1,0 +1,89 @@
+/* ══════════════════════════════════════════════════
+   About Me：与 Hero 同一个黑色摄影棚空间
+   左：悬挂工牌（绳固定在顶 → 金属扣 → 卡片）
+   右：大段文字；两栏与视口纵向居中对齐
+   ══════════════════════════════════════════════════ */
+
+.about {
+  --bw: clamp(200px, 19vw, 300px); /* 工牌卡片宽度，整套挂件按它等比 */
+  position: relative;
+  min-height: 100vh;
+  background: transparent; /* 黑色来自全局画布 */
+  color: #f2f2f2;
+  overflow: hidden;
+}
+
+/* ── 工牌挂件：绳带从区块顶端垂下（可拉伸）→ 金属扣 → 卡片
+   卡片中心正对首屏视口的 50vh，与右侧文字同一视觉中线 ── */
+.about-badge {
+  position: absolute;
+  top: 0;
+  left: 9vw;
+  width: var(--bw);
+  height: calc(50vh + var(--bw) * 0.701); /* 卡片半高 = 0.701·宽 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: 50% 0; /* 摆动以绳顶为轴 */
+  will-change: transform;
+}
+.about-badge img {
+  display: block;
+  flex: 0 0 auto;
+}
+/* 织带段：与下段同宽同轴，纵向拉伸补足绳长（质感来自原图层）
+   顶端渐隐融入黑暗，不出现硬切 */
+.badge-rope {
+  width: 100%;
+  height: 120px; /* 实际值由 js/hero-about.js 计算 */
+  object-fit: fill;
+  /* 从黑暗中慢慢显现：顶部长渐隐 × 两侧边缘羽化（双向遮罩相交），
+     织带保持纯黑，只弱化轮廓对比 */
+  -webkit-mask-image:
+    linear-gradient(180deg, transparent 0, rgba(0, 0, 0, 0.35) 18%, #000 42%),
+    linear-gradient(90deg, transparent 31%, #000 40%, #000 57%, transparent 66%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(180deg, transparent 0, rgba(0, 0, 0, 0.35) 18%, #000 42%),
+    linear-gradient(90deg, transparent 31%, #000 40%, #000 57%, transparent 66%);
+  mask-composite: intersect;
+}
+/* 下段：金属扣 + 透明塑料套 + 卡片 + 打光，PSD 全图层合成
+   叠一点极轻的边缘光和落影，增强黑底上的体积感 */
+/* 下段：所有光都来自素材本身的材质反射；只保留承重落影 */
+.badge-lower {
+  width: 100%;
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.55));
+}
+
+/* ── 右侧文字：与首屏视口纵向居中（和工牌同一中线） ── */
+.about-inner {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+.about-text {
+  margin-left: calc(9vw + var(--bw) + 7vw);
+  margin-right: var(--pad-x, 4.2%);
+  font-family: var(--font-sans, "Geist", sans-serif);
+}
+.about-lead {
+  font-size: clamp(24px, 2.6vw, 48px);
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: 0.002em;
+  color: #f2f2f2;
+}
+.about-sub {
+  margin-top: 1.2em;
+  font-size: clamp(24px, 2.6vw, 48px);
+  line-height: 1.3;
+  font-weight: 500;
+  color: #777772;
+}
+.about-sub .u {
+  color: #f2f2f2;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.12em;
+}

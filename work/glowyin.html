@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Glowyin — Zhaolei Yin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <!-- hero-bg.css 里只用它开头那段全站基础 reset(*{margin:0;padding:0;
+       box-sizing:border-box} + html/body 基底黑)——这份 reset 目前就放在
+       这个文件里，其余 .layer-ambient/.hero-bg 相关规则在没有对应
+       DOM 的这个页面上不会命中任何元素，纯粹是死规则，不影响视觉 -->
+  <link rel="stylesheet" href="../css/hero-bg.css" />
+  <link rel="stylesheet" href="../css/site-chrome.css" />
+  <link rel="stylesheet" href="../css/work.css" />
+  <link rel="stylesheet" href="../css/case.css" />
+  <!-- 只服务这一个 case 的样式（比如 Research section 用的
+       Duolingo 项目自己的 Color Palette）——不进 case.css，
+       避免把某一个项目的品牌色变成所有 case 共用模板的一部分 -->
+  <link rel="stylesheet" href="../css/case-glowyin.css" />
+
+  <!-- 进场动画在 body 末尾的脚本里起跑，但这些脚本要等解析到那里才开始
+       下载——那段等待就是「点开之后先顿一下」。这里提前发起请求，让它们
+       和文档解析并行下载，morph 能早几十毫秒开跑 -->
+  <link rel="preload" as="script" href="../vendor/gsap/gsap.min.js" />
+  <link rel="preload" as="script" href="../js/case-enter.js" />
+
+  <!-- 进场过渡的交接点，必须在首次绘制之前同步跑完：把 Work 页存下来的
+       起始 box 写成 CSS 变量、给 <html> 打上 data-case-enter="1"，
+       css/case.css 里对应的规则会先把页面结构藏起来，避免「先闪一眼
+       完整版面、再开始动画」。真正的时间轴在 js/case-enter.js。
+       任何一步不满足（直接打开本页、隔太久、窄屏、reduced-motion）就
+       什么都不做，页面按最普通的方式显示 -->
+  <script>
+    (function () {
+      try {
+        // 从 Work 页跳进来必须落在页面顶部，不保留旧的滚动位置
+        if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+        var raw = sessionStorage.getItem("case-enter");
+        if (!raw) return;
+        sessionStorage.removeItem("case-enter"); // 一次性，刷新后不再重放
+        var d = JSON.parse(raw);
+        if (!d || d.slug !== "glowyin") return;
+        if (Date.now() - d.t > 4000) return;
+        if (!d.w || !d.h) return;
+        if (window.innerWidth < 900) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        var r = document.documentElement;
+        r.style.setProperty("--enter-x", d.x + "px");
+        r.style.setProperty("--enter-y", d.y + "px");
+        r.style.setProperty("--enter-w", d.w + "px");
+        r.style.setProperty("--enter-h", d.h + "px");
+        r.dataset.caseEnterTime = d.ct || 0;
+        // 交接帧截图（dataURL 很长，放内存全局变量，不塞进 DOM 属性）
+        window.__caseEnterPoster = d.poster || "";
+        r.dataset.caseEnter = "1";
+      } catch (e) {
+        /* sessionStorage 不可用等情况：忽略，正常显示页面 */
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- 全局固定顶栏/底栏：和 index.html 完全同一份标记，只是链接
+       改成带 ../index.html 前缀跳回主页面对应位置 -->
+  <header class="site-nav" id="site-nav">
+    <a class="site-nav-logo" href="../index.html#hero">ZHAOLEI YIN</a>
+    <nav class="site-nav-links">
+      <a href="../index.html#work">Work</a>
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#outro">Contact</a>
+    </nav>
+  </header>
+  <!-- 全局固定底栏：和 index.html 完全同一份标记/内容，不单独
+       设计——全站所有页面的这个 footer 都必须保持一致 -->
+  <footer class="site-footer" id="site-footer">
+    <span>&copy; 2026 ZHAOLEI YIN</span>
+    <a class="site-footer-mid" href="https://www.linkedin.com/in/zhaolei-yin/" target="_blank" rel="noopener">LINKEDIN</a>
+    <a href="mailto:yinzhaolei1113@gmail.com">YINZHAOLEI1113@GMAIL.COM</a>
+  </footer>
+
+  <!-- Case Detail Page 通用模板（css/case.css + js/case.js）：
+       左侧 sticky 信息栏 + 右侧 editorial storytelling 内容。
+       Research/Approach/Design 三个 section 目前只有占位块——
+       assets/work/duolingo/ 还没有对应素材，等补图后直接替换
+       .case-placeholder 就行，不用改结构。 -->
+  <main class="case">
+    <!-- .case-page-canvas 把 sidebar + content 包成一个整体，结尾退场时
+         作为一个 unified canvas 一起向左移动。
+         这里刻意不使用 ScrollTrigger 的 pin：pin 会在被 pin 的元素上留下
+         transform（哪怕是 matrix(1,0,0,1,0,0) 这种恒等值），而带 transform
+         的祖先会成为 position:fixed 后代的 containing block，把里面
+         Experience 那段 sticky video 的 pin 定位彻底算错。
+         改用原生 position:sticky + bottom:0（见 css/case.css）：它天然就是
+         「内容全部滚完之后，最后一屏停在视口里不动」，不写任何 transform，
+         对内部的 pin 完全无副作用 -->
+    <div class="case-page-canvas" id="case-page-canvas">
+    <div class="case-layout">
+      <aside class="case-sidebar">
+        <!-- 左侧只负责项目识别（名字/一句 tagline/类别·年份/目录），
+             不再承担项目介绍——参考 Koto case study 的信息层级：
+             左侧极简，右侧 Hero 才是主视觉，说明文字挪到 Hero 下方
+             （见下面 #overview 里的 .case-overview） -->
+        <div class="case-sidebar-inner">
+          <!-- 两段不同深浅的中性灰：Glow 亮、yin 更深，
+               颜色在 css/case-glowyin.css 里 -->
+          <h1 class="case-title case-title-accent"><span class="gy-title-lead">Glow</span>yin</h1>
+          <p class="case-tagline">A mirror that adjusts to you.</p>
+          <p class="case-meta">Industrial Design — 2022</p>
+          <nav class="case-toc">
+            <a href="#overview">Overview</a>
+            <a href="#research">Research</a>
+            <a href="#problem">Problem Statement</a>
+            <a href="#exploration">Exploration</a>
+            <a href="#final-design">Final Design</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#brand-identity">Brand Identity</a>
+            <a href="#packaging">Packaging</a>
+          </nav>
+        </div>
+      </aside>
+
+      <div class="case-content">
+        <!-- 01 Overview -->
+        <section class="case-section" id="overview">
+          <!-- 和首页 Work 卡片用的是同一个文件，shared-element 过渡才会
+               让人觉得是同一段影片在连续展开，而不是换了一个素材 -->
+          <div class="case-module case-module-hero" id="case-hero-media">
+            <video src="../assets/work/glowyin/hero.mp4" autoplay muted loop playsinline></video>
+          </div>
+          <div class="case-overview">
+            <p class="case-caption">
+              Built for a crowded desk: it clips on, moves to any height, and
+              brings its own light.
+            </p>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- 02 Research：时间线（竖向、窄）+ 研究照片拼贴（宽）同一排，
+             顶边对齐、底边基本齐平，构成一个完整的横向矩形 composition -->
+        <section class="case-section" id="research">
+          <p class="case-kicker">Research</p>
+          <!-- 时间线 + 拼贴那一排，和下面的 3.png 之间用的是和排内部
+               同一个 20px gap，不是模板里"模块接模块"的 7px——否则同一
+               个 section 里横向 20px、纵向 7px，看起来就是上下被挤扁了 -->
+          <div class="case-module gy-stack">
+            <div class="case-research-row">
+              <img class="case-research-timeline" src="../assets/work/glowyin/1.png" alt="Mirror evolution timeline" loading="lazy" decoding="async" />
+              <img class="case-research-collage" src="../assets/work/glowyin/2.jpg" alt="User research" loading="lazy" decoding="async" />
+            </div>
+            <img src="../assets/work/glowyin/3.jpg" alt="Research" loading="lazy" decoding="async" />
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- 03 Problem Statement：左标签 + 右单列四条，纯文字，
+             没有 card / box / border / 背景 -->
+        <section class="case-section" id="problem">
+          <div class="case-module case-problem">
+            <p class="case-kicker">Problem Statement</p>
+            <ol class="case-problem-list">
+              <li>You can&rsquo;t see your own face properly.</li>
+              <li>There&rsquo;s no room left on the desk.</li>
+              <li>You end up hunched over for twenty minutes.</li>
+              <li>You want to follow a video at the same time.</li>
+            </ol>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- 04 Exploration：草图本身就是视觉主体。explore.png 已经是一张
+             排好版的 16:9 草图拼贴（8000×4500），所以这里不再由页面去拼
+             第二张图——通栏放一张，section 里不放别的东西 -->
+        <section class="case-section" id="exploration">
+          <p class="case-kicker">Exploration</p>
+          <div class="case-module case-media-full">
+            <img src="../assets/work/glowyin/explore.jpg" alt="Ideation sketches and mechanism exploration" loading="lazy" decoding="async" />
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- 05 Final Design：最终产品 + 细节 + 技术图合成一组 editorial
+             排版，不再拆成两个 section。
+             第一行是非对称的两列——左边窄列上下叠两张细节，右边宽列是
+             完整的 Final Hero（原始比例，不裁切），左列两张加中间的间距
+             正好等于 Hero 的高度，所以整组的上下边是齐的；
+             第二行技术图横向铺满，宽度和上面整组对齐，作为看完产品和
+             细节之后的补充信息。
+             四张图放在同一个 grid 里，间距由 grid 的 gap 统一给出，
+             不靠一堆 margin 拼出来 -->
+        <section class="case-section" id="final-design">
+          <p class="case-kicker">Final Design</p>
+          <div class="case-module gy-final">
+            <img class="gy-final-detail" src="../assets/work/glowyin/joint.png" alt="Articulating joint detail" loading="lazy" decoding="async" />
+            <img class="gy-final-main" src="../assets/work/glowyin/finalhero.webp" alt="Glowyin final product" loading="lazy" decoding="async" />
+            <img class="gy-final-detail" src="../assets/work/glowyin/speaker.jpg" alt="Speaker and base detail" loading="lazy" decoding="async" />
+            <img class="gy-final-technical" src="../assets/work/glowyin/glowyintechnical.png" alt="Technical drawing" loading="lazy" decoding="async" />
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- 07 How It Works：三个功能演示并排，同比例同尺寸（三张原图
+             本来就都是 ~4:5，所以裁切几乎为零）。图下只有编号 + 一个
+             短标题，不写说明段落 -->
+        <section class="case-section" id="how-it-works">
+          <p class="case-kicker">How It Works</p>
+          <div class="case-module gy-features">
+            <figure class="gy-feature">
+              <img src="../assets/work/glowyin/height.jpg" alt="Adjustable height" loading="lazy" decoding="async" />
+              <figcaption><span class="gy-feature-index">01</span><span class="gy-feature-title">Adjustable Height</span></figcaption>
+            </figure>
+            <figure class="gy-feature">
+              <img src="../assets/work/glowyin/light.jpg" alt="Lighted makeup mirror" loading="lazy" decoding="async" />
+              <figcaption><span class="gy-feature-index">02</span><span class="gy-feature-title">Lighted Makeup Mirror</span></figcaption>
+            </figure>
+            <figure class="gy-feature">
+              <img src="../assets/work/glowyin/screendisplay.webp" alt="Screen display" loading="lazy" decoding="async" />
+              <figcaption><span class="gy-feature-index">03</span><span class="gy-feature-title">Screen Display</span></figcaption>
+            </figure>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- 08 Brand Identity：只讲视觉语言。字体规范（Depth of
+             perfection. + glowing + zhaolei yin）和 GlowYin 海报同一行，
+             两张原始比例几乎相同，所以等高、顶底都对齐。
+             这一组原来和包装内容挤在同一个 section 里，现在单独成节 -->
+        <section class="case-section" id="brand-identity">
+          <p class="case-kicker">Brand Identity</p>
+          <div class="case-module gy-brand-row">
+            <img src="../assets/work/glowyin/typeface.png" alt="Glowyin typeface and logotype" loading="lazy" decoding="async" />
+            <img src="../assets/work/glowyin/poster.jpg" alt="Glowyin campaign poster" loading="lazy" decoding="async" />
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- 09 Packaging：所有包装相关内容，三组，原有排版和顺序都没动。
+             这些素材原本是两张 8000×4500 的 presentation board
+             （packaging process.png / packaging2.png）里的内容，早先已经
+             拆成单独文件、用原生 grid 按原构图重搭过，这次只是把它们
+             从 Brand & Packaging 里整体移到自己的 section。
+
+             外层还是一个 .gy-stack，所以组与组之间和每组内部是同一个
+             --case-gap；section 之间也只隔一条同样节奏的 divider，
+             拆节不会多出一块空白 -->
+        <section class="case-section" id="packaging">
+          <p class="case-kicker">Packaging</p>
+          <div class="case-module gy-stack">
+            <!-- 1) 概念草图 + 机构图纸 / 抽拉原型 -->
+            <div class="gy-pack-a">
+              <img class="gy-pack-a-concept" src="../assets/work/glowyin/concept%20skectch.png" alt="Packaging concept sketches" loading="lazy" decoding="async" />
+              <div class="gy-stack gy-pack-col">
+                <img src="../assets/work/glowyin/mechanismdrawing.png" alt="Pull-tab mechanism drawing" loading="lazy" decoding="async" />
+                <img src="../assets/work/glowyin/pulltabprototype.png" alt="Pull-tab paper prototype" loading="lazy" decoding="async" />
+              </div>
+            </div>
+            <!-- 说明文字自己占一行，不在上面那个图片网格里面——所以它
+                 完全不参与左右两栏的高度计算，加不加都不会改变图片尺寸
+                 和对齐。右对齐到右侧图片的右边缘；到图片的 7px 距离由
+                 外层 .gy-stack 的 gap 给出 -->
+            <p class="gy-pack-caption">Pull-Tab Mechanism</p>
+
+            <!-- 2) 包装线稿：横向通栏 -->
+            <img class="gy-pack-line" src="../assets/work/glowyin/%E5%8C%85%E8%A3%85%E7%BA%BF%E7%A8%BF.png" alt="Packaging line drawings" loading="lazy" decoding="async" />
+
+            <!-- 3) 成品包装效果图：三张等宽等高一组，顺序 1→2→3 不变 -->
+            <div class="gy-structure">
+              <img src="../assets/work/glowyin/%E7%BB%93%E6%9E%84%E5%9B%BE1.jpg" alt="Embossed logo detail" loading="lazy" decoding="async" />
+              <img src="../assets/work/glowyin/%E7%BB%93%E6%9E%84%E5%9B%BE2.jpg" alt="Closed packaging" loading="lazy" decoding="async" />
+              <img src="../assets/work/glowyin/%E7%BB%93%E6%9E%84%E5%9B%BE3.jpg" alt="Final packaging, opened" loading="lazy" decoding="async" />
+            </div>
+          </div>
+        </section>
+            </div>
+    </div>
+    </div>
+
+    <!-- 结尾退场的滚动行程：canvas 用 sticky 停住之后，就是靠滚过这一段
+         把退场动画推完（进度 0→1）。它不是「空白黑屏」——这段时间视口里
+         显示的正是停住的最后一屏内容 + 逐渐浮现的下一个项目。高度只在
+         桌面端启用退场动效时才由 CSS 给出，其余情况是 0 -->
+    <div class="case-ending-spacer" id="ending-spacer" aria-hidden="true"></div>
+
+    <!-- 结尾：Next Project 提示 + Contact 合并成一个紧凑区域，脱离
+         上面 sidebar+content 的两栏 grid。Duolingo 按年份序
+         （2023→2022）下一个是 Glowyin；Glowyin 的独立 case 页还没做，
+         这两个链接现在会 404，等这轮 Duolingo 模板验收通过、开始
+         套用到其它 case 时一并建好——点击行为（进入下一个 case）
+         没有变，只是视觉从一整屏大 Hero 收成了小尺寸预览 -->
+    <section class="case-ending" id="case-next">
+      <!-- 这一层（.case-ending-inner）是唯一会被结尾动效碰到的元素：
+           js/case.js 只在这个 section 自己滚进视口时，对它做
+           translateX + opacity 的 scrub。上面所有 case study section
+           完全在动效范围之外，不被包裹、不被 pin、不被设置任何
+           opacity/transform——它们按正常文档流滚动完毕之后，才轮到
+           这里 -->
+      <!-- 结尾内容整体占据视口右侧，左边留出的空白正好让向左退场的
+           旧页面继续露出一部分——新旧两个项目短暂同时存在，而不是
+           旧的先消失、新的再出现。
+           上半：NEXT UP 标签 + 项目名 + 一句描述；
+           下半：左 Contact、右 [ VIEW ALL PROJECTS ] + 预览图 -->
+      <!-- 带 .case-ending-reveal 的元素会被「横向拉开」（clip-path 从右
+           往左收 → 全开），不是普通 fade；预览图不带这个类，它走的是
+           「从右下角由小放大」那条线，而且要比所有文字都更早出现。
+           各自的出场时机全部由 js/case.js 里的进度区间控制 -->
+      <div class="case-ending-inner">
+
+        <!-- 下半部分是两列：左列（分隔线 + Contact）和右列
+             （[ VIEW ALL PROJECTS ] + 预览图）。分隔线只压在左列上方，
+             不横穿到预览图那一侧 -->
+        <div class="case-ending-row">
+          <div class="case-ending-col-main">
+            <div class="case-ending-next">
+            <span class="case-kicker case-ending-reveal">Next Up</span>
+            <a class="case-ending-next-link" href="chicken-5-road.html">
+            <span class="case-ending-next-title case-ending-reveal">Chicken 5 Road</span>
+            <span class="case-ending-next-tagline case-ending-reveal">A neighborhood classic, retold.</span>
+            </a>
+            </div>
+            <div class="case-ending-rule case-ending-reveal" aria-hidden="true"></div>
+            <div class="case-ending-contact case-ending-reveal">
+              <p class="case-ending-heading">Working on something?</p>
+              <p class="case-ending-sub">Tell me about it. I answer every message.</p>
+              <a class="case-ending-cta" href="mailto:yinzhaolei1113@gmail.com">GET IN TOUCH &#8599;</a>
+            </div>
+          </div>
+          <div class="case-ending-preview">
+            <a class="case-view-all case-ending-reveal" href="../index.html#work">[ VIEW ALL PROJECTS ]</a>
+            <!-- 下一个项目的真实 hero 素材，和 Work 页 Glowyin 卡片用的
+                 是同一个文件，不再是占位框 -->
+            <a class="case-ending-preview-link" href="chicken-5-road.html">
+              <div class="case-ending-preview-image">
+                <img src="../assets/work/chicken-5-road/hero.gif" alt="Chicken 5 Road" loading="lazy" decoding="async" />
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../vendor/gsap/gsap.min.js"></script>
+  <script src="../vendor/gsap/ScrollTrigger.min.js"></script>
+  <script src="../js/gsap-init.js"></script>
+  <script src="../js/site-chrome.js"></script>
+  <!-- 进场过渡第二段：morph 到 Hero 真实位置 + 按节奏揭示页面结构。
+       放在 case.js 之前，让它先接管进场状态 -->
+  <script src="../js/case-enter.js"></script>
+  <script src="../js/case.js"></script>
+</body>
+</html>

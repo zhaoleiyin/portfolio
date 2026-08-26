@@ -1,0 +1,326 @@
+/* ══════════════════════════════════════════════════
+   Work：连续作品流（滚动切换逻辑参考 koto.com，非视觉复刻）
+   左：.work-info 整体 sticky，"My Work" 常驻；.work-info-track 里
+       叠放每个 case 的文字块，随右侧 active case 交叉淡入淡出。
+   右：.work-track 连续纵向滚动轨道，media 依次排列，间距很小，
+       上一张/下一张会露出一部分；离视口中心越近越亮，越远越暗。
+   透明度/交叉淡入淡出的实际数值由 js/work-track.js 驱动。
+   ══════════════════════════════════════════════════ */
+
+.work {
+  position: relative;
+  background: #0a0a0a; /* 与 Hero/About 同一张黑，整站视觉连续 */
+  color: #f2f2f2;
+  /* 吃掉 About 结尾那段空黑尾巴（文字居中后，section 剩下的下半段本来就是空的），
+     缩短两个 section 之间的断开感；Work 内部自己的排布（32vh 起始留白等）不受影响，
+     因为这里只是让 Work 的文档流起点提前，sticky 信息栏内部逻辑完全没变 */
+  margin-top: -21vh;
+}
+
+.work-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 2.5vw;
+  padding: 0 var(--pad-x, 4.2%);
+}
+
+/* ── 左：sticky 信息区域（约 35%，对齐 Koto 参考的栏宽比例，
+   右侧 media 相应占约 62～65%） ── */
+.work-info {
+  position: sticky;
+  top: 0;
+  flex: 0 0 35%;
+  min-width: 280px;
+  height: 100vh;
+  display: flex;
+  align-items: flex-start; /* 不做简单垂直居中——见下面 .work-info-inner 的 padding-top */
+}
+/* 整块（MY WORK + title/desc/meta）统一往下推，上方留出大片黑色负空间，
+   让右侧大图成为第一视觉焦点，左侧文字重心明显低于图片顶部。
+   固定 padding-top，不是内容驱动，所有 case 位置完全一致 */
+.work-info-inner {
+  width: 100%;
+  padding-top: 32vh;
+  font-family: var(--font-sans, "Geist", sans-serif);
+}
+.work-kicker {
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(11px, 0.85vw, 14px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9a9a94;
+}
+
+/* 文字块叠放容器：固定 editorial grid，高度写死，不再由 JS 按
+   内容量出——title/desc/meta 三个区域各自用固定 top 定位在
+   .work-info-item 内，不管文字多少、标题一行还是两行，起始位置
+   永远一致，只有交叉切换时整块一起淡入淡出 + 位移 */
+.work-info-track {
+  position: relative;
+  margin-top: 0.5em;
+  height: 52vh;
+  min-height: 460px;
+}
+.work-info-item {
+  position: absolute;
+  inset: 0;
+}
+/* 顶部区域：Title，固定贴在文字块顶端。
+   .work-title-frame 是滚轮式切换的"槽位"：overflow:hidden，标题本身
+   是里面一个普通块，靠 JS 用 translateY 把旧标题推出槽位、新标题
+   从对面推入——效果类似 Apple 闹钟切换数字。只有标题用这套，
+   正文/meta 完全不受影响。
+   高度这里只是兜底默认值（两行标题的高度）；js/work-track.js 会
+   在运行时把每个槽位的高度改成"刚好等于它自己标题的实际高度"——
+   一行标题的槽位就只有一行高，不能统一用两行的高度，否则一行标题
+   往下停靠时还没真正滑出这个偏高的槽位，会跟旁边露出一截、造成
+   和别的 case 标题重叠 */
+.work-title-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(2.2 * clamp(28px, 3.2vw, 52px));
+  overflow: hidden;
+}
+.work-title {
+  font-size: clamp(28px, 3.2vw, 52px);
+  font-weight: 500;
+  line-height: 1.1;
+}
+/* 中部区域：Description，起始位置固定，留出比最长标题（两行）
+   还大一截的距离，不会因为某个 case 标题只有一行就往上贴 */
+.work-desc {
+  position: absolute;
+  top: 17vh;
+  left: 0;
+  right: 0;
+  max-width: 34em;
+  font-size: clamp(15px, 1.05vw, 19px);
+  line-height: 1.6;
+  color: #c8c8c2;
+}
+
+/* 底部区域：logo + project meta，起始位置同样固定，
+   留出比最长描述还大一截的距离，不随描述长短浮动 */
+.work-tag {
+  position: absolute;
+  top: 40vh;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.9em;
+  width: fit-content;
+  color: inherit;
+  text-decoration: none;
+}
+.work-tag-thumb {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1a1a1a;
+}
+.work-tag-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* 品牌 logo 类缩略图（如 CBS、Glowyin）：深色底看不清黑色矢量图，
+   改纯白底 + contain，避免裁切；纯白（不是浅灰）是为了和 logo 素材
+   自带的白底完全同色，贴上去不会看出"内框"分层的痕迹 */
+.work-tag-thumb.is-logo {
+  background: #fff;
+}
+.work-tag-thumb.is-logo img {
+  object-fit: contain;
+  padding: 3px;
+}
+.work-tag-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(11px, 0.8vw, 13px);
+  letter-spacing: 0.03em;
+}
+.work-tag-text span:first-child {
+  font-family: var(--font-sans, "Geist", sans-serif);
+  font-size: 1.15em;
+  letter-spacing: 0;
+  color: #f2f2f2;
+}
+.work-tag-text span:not(:first-child) {
+  text-transform: uppercase;
+  color: #8c8c86;
+}
+.work-tag:hover .work-tag-text span:first-child {
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.15em;
+}
+
+/* ── 右：连续纵向 media 轨道 ── */
+.work-track {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  /* 和 Case Study 内容区的图片间距对齐：那边是 css/case.css 里的
+     --case-gap（7px），首页 Work 的 Hero 图之间用同一个值。
+     原来是 0.4vh——会跟着窗口高度浮动（视口 820 时约 3.3px），
+     和 case 页固定的 7px 对不上，点进去和退回来节奏会变 */
+  gap: 7px;
+}
+.work-media {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 100%;
+  /* 所有 case 统一用 step-inside-tomorrow/hero.mp4 的真实比例（1920×1080），
+     保证视频完整显示、不裁切；其余素材也按同一比例铺满，不单独裁切判断 */
+  aspect-ratio: 16 / 9;
+  border-radius: 0; /* 硬边矩形，和 Hero 娃娃机/工牌一致的 graphic 语言，不做成圆角卡片 */
+  overflow: hidden;
+  background: #141414; /* 素材未就位时的占位底色，避免破图图标很突兀；不是装饰性卡片底 */
+  color: inherit;
+  text-decoration: none;
+  transform-origin: 50% 50%;
+  will-change: opacity, transform;
+}
+.work-media img,
+.work-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* 竖版素材（如 Duolingo）：不裁切、完整居中显示，四周露黑底，
+   而不是像其他横版素材那样铺满裁切 */
+.work-media.is-contain {
+  background: #0a0a0a; /* 和站内其他区块同一张黑，不用纯黑 #000，避免色温不一致 */
+}
+.work-media.is-contain img,
+.work-media.is-contain video {
+  object-fit: contain;
+}
+/* Shared-element 过渡：跳到 work/duolingo.html 时，浏览器原生
+   Cross-document View Transition 会把这个小缩略图 morph 成 Case 页
+   里同名的大 Hero（css/case.css 里 #case-hero-media 用了同一个
+   view-transition-name）。名字要和站内其它可能用到过渡的地方区分，
+   所以带上 case slug，不叫一个通用的名字 */
+#work-media-duolingo {
+  view-transition-name: duolingo-hero;
+}
+/* ── 自定义娃娃机爪子光标：hover Case Hero Media 时跟随鼠标出现，
+   取代原来居中的 VIEW CASE 按钮；跟随/淡入淡出/press-release 动画
+   由 js/work-cursor.js 用 GSAP 驱动，这里只负责外观和静态偏移 ── */
+.work-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.work-cursor-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7em;
+  transform: translate(-6px, -6px); /* 爪子悬挂点大致对齐真实指针位置 */
+}
+.work-cursor-claw {
+  position: relative;
+  width: 26px;
+  height: 54px;
+  flex: none;
+}
+.work-cursor-claw .wc-body {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+/* 爪指的顶端紧贴在爪体底部往下挂，不要叠进爪体本身——
+   光标这套素材的爪体比例和 Hero 娃娃机的大爪体不一样，
+   不能直接照抄 85.07% 那套百分比 */
+.work-cursor-claw .wc-arm {
+  position: absolute;
+  top: 100%;
+  width: 34%;
+  transform-origin: 50% 0%;
+}
+.work-cursor-claw .wc-arm-l { left: 8%; }
+.work-cursor-claw .wc-arm-r { left: 58%; }
+.work-cursor-label {
+  margin-top: 0.9em;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #f2f2f2;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  /* 窄屏放弃 sticky 交叉切换（空间不够做居中判断），
+     退化为原来的顺序阅读：信息块正常堆叠、逐个可见 */
+  .work-layout {
+    flex-direction: column;
+    gap: 6vh;
+    padding: 6vh var(--pad-x, 4.2%);
+  }
+  .work-info {
+    position: static;
+    height: auto;
+  }
+  .work-info-track {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  .work-info-item {
+    position: relative;
+    inset: auto;
+    opacity: 1 !important;
+    transform: none !important;
+    margin-bottom: 6vh;
+  }
+  .work-info-item:last-child {
+    margin-bottom: 0;
+  }
+  /* 桌面端的固定 grid（title/desc/meta 绝对定位）在窄屏放弃，
+     退回正常文档流，一个跟一个往下堆；标题的滚轮槽位在窄屏也
+     一并解除，不裁切，直接正常显示 */
+  .work-title-frame {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    height: auto;
+    overflow: visible;
+  }
+  .work-title,
+  .work-desc,
+  .work-tag {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+  }
+  .work-desc {
+    margin-top: 1.5em;
+  }
+  .work-tag {
+    margin-top: 2.5em;
+  }
+  .work-track {
+    gap: 2em;
+  }
+  .work-media {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

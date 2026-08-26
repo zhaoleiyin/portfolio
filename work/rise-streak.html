@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rise Streak — Zhaolei Yin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&family=Kanit:wght@600&display=swap" rel="stylesheet" />
+  <!-- hero-bg.css 只取它开头那段全站基础 reset，其余规则在本页没有
+       对应 DOM，不影响视觉（和其它 case 页一致） -->
+  <link rel="stylesheet" href="../css/hero-bg.css" />
+  <link rel="stylesheet" href="../css/site-chrome.css" />
+  <link rel="stylesheet" href="../css/work.css" />
+  <link rel="stylesheet" href="../css/case.css" />
+  <!-- 只服务这一个 case 的样式（占位块系统 + 本页的排版原语），
+       不进共用模板 -->
+  <link rel="stylesheet" href="../css/case-rise-streak.css" />
+
+  <!-- 进场动画脚本提前并行下载（和其它 case 页一致） -->
+  <link rel="preload" as="script" href="../vendor/gsap/gsap.min.js" />
+  <link rel="preload" as="script" href="../js/case-enter.js" />
+
+  <!-- 进场过渡交接点：必须在首次绘制前同步跑完（和其它 case 页
+       同一份逻辑，只有 slug 不同） -->
+  <script>
+    (function () {
+      try {
+        if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+        var raw = sessionStorage.getItem("case-enter");
+        if (!raw) return;
+        sessionStorage.removeItem("case-enter");
+        var d = JSON.parse(raw);
+        if (!d || d.slug !== "rise-streak") return;
+        if (Date.now() - d.t > 4000) return;
+        if (!d.w || !d.h) return;
+        if (window.innerWidth < 900) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        var r = document.documentElement;
+        r.style.setProperty("--enter-x", d.x + "px");
+        r.style.setProperty("--enter-y", d.y + "px");
+        r.style.setProperty("--enter-w", d.w + "px");
+        r.style.setProperty("--enter-h", d.h + "px");
+        r.dataset.caseEnterTime = d.ct || 0;
+        window.__caseEnterPoster = d.poster || "";
+        r.dataset.caseEnter = "1";
+      } catch (e) {
+        /* 忽略，正常显示页面 */
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- 全局固定顶栏/底栏：和 index.html 完全同一份标记 -->
+  <header class="site-nav" id="site-nav">
+    <a class="site-nav-logo" href="../index.html#hero">ZHAOLEI YIN</a>
+    <nav class="site-nav-links">
+      <a href="../index.html#work">Work</a>
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#outro">Contact</a>
+    </nav>
+  </header>
+  <footer class="site-footer" id="site-footer">
+    <span>&copy; 2026 ZHAOLEI YIN</span>
+    <a class="site-footer-mid" href="https://www.linkedin.com/in/zhaolei-yin/" target="_blank" rel="noopener">LINKEDIN</a>
+    <a href="mailto:yinzhaolei1113@gmail.com">YINZHAOLEI1113@GMAIL.COM</a>
+  </footer>
+
+  <!-- Rise Streak Case Study：沿用通用模板（css/case.css + js/case.js），
+       排版原语在 css/case-rise-streak.css。
+       目前这个项目还没有任何图片/视频素材（assets/work/rise-streak/
+       里只有 icon.png），所以全页的媒体位都是带标签的占位块
+       （.rs-ph）——占位的比例就是最终版式，之后按标签逐个替换真实
+       素材，不会跳版。 -->
+  <main class="case">
+    <div class="case-page-canvas" id="case-page-canvas">
+    <div class="case-layout">
+      <aside class="case-sidebar">
+        <div class="case-sidebar-inner">
+          <h1 class="case-title case-title-accent">Rise Streak</h1>
+          <p class="case-tagline">Building better habits through shared momentum.</p>
+          <p class="case-meta">UX/UI &mdash; 2026</p>
+          <nav class="case-toc">
+            <a href="#overview">Overview</a>
+            <a href="#problem">The Problem</a>
+            <a href="#solution">Solution</a>
+            <a href="#experience">Final Experience</a>
+            <a href="#system">Design System</a>
+            <a href="#before-after">Testing</a>
+            <a href="#closing">Campaign</a>
+          </nav>
+        </div>
+      </aside>
+
+      <div class="case-content">
+        <!-- ══ 01 HERO ══
+             从 Work 页点进来的 shared-element 落点。这是全页唯一的
+             真实媒体位（assets/work/rise-streak/hero.mp4，和首页 Work
+             卡片同一个文件——进场 morph 过渡靠这一点保持连续，换成
+             占位块会断掉）。Hero 下方只有一段项目介绍，按规格不加
+             第二段解释。 -->
+        <section class="case-section" id="overview">
+          <div class="case-module case-module-hero" id="case-hero-media">
+            <video src="../assets/work/rise-streak/hero.mp4" autoplay muted loop playsinline></video>
+          </div>
+          <!-- Hero 下方的项目描述：和其它 case 完全同一个组件
+               （.case-overview > .case-caption——右侧窄栏小字、
+               次级透明度） -->
+          <div class="case-overview">
+            <p class="case-caption">
+              Rise Streak turns everyday progress into something you can see,
+              share, and build on with others.
+            </p>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- ══ 02 THE PROBLEM ══
+             一整幅 editorial research composition：站在网站原本的黑底
+             和内容栏 grid 上，没有浅色画布、没有卡片、没有背景框，
+             字体自始至终是全站那一套正文字体。Rise Streak 的品牌感
+             只从橙色的数字、supported、icon、细线和轻微动画进来。
+
+             构图（.rsp-stage 是一块 1 : 0.66 的按比例画布，子元素用
+             --x / --y / --w 百分比坐标绝对定位，彼此重叠错位）：
+               10 张真实人物照片组成居中的一簇，大小各不相同，
+               两处刻意轻微重叠，细橙线把他们连成一张 research 网；
+               5 和 38 两个 oversized data point 长在人物簇下方两侧，
+               各有一条细线连回簇里；
+               三条 finding 在数字下面一行并排，作为小号 annotation。
+             之后留出呼吸，再依次是中等尺寸的 Insight 和最轻的 HMW。
+
+             动画在 js/case-rise-streak.js：细线描边生长、数字 0→5 /
+             0→38、人物照片极轻微浮动；reduced-motion 下全部不跑。 -->
+        <section class="case-section" id="problem">
+          <div class="case-module case-module-no-reveal rsp" id="rsp">
+            <p class="rsp-kicker">The Problem</p>
+
+            <div class="rsp-stage">
+              <!-- 细橙线：人物之间、以及两个数字连回人物簇。viewBox 与
+                   画布同比例，坐标即百分比×10 / ×6.6，所以线的两端永远
+                   咬在圆的边缘上。轻微弯曲 = 手绘感，不是几何直线 -->
+              <svg class="rsp-web" viewBox="0 0 1000 660" fill="none" aria-hidden="true">
+                <g class="rsp-web-g">
+                  <path d="M187.5 135.0 Q237.5 143.0 287.5 133.0" />
+                  <path d="M360.5 154.0 Q380.5 177.0 408.5 187.0" />
+                  <path d="M512.5 182.0 Q535.5 173.0 547.5 153.0" />
+                  <path d="M627.5 124.0 Q682.5 135.0 738.5 125.0" />
+                  <path d="M527.5 230.0 Q581.5 246.0 637.5 242.0" />
+                  <path d="M734.5 265.0 Q764.5 285.0 800.5 289.0" />
+                  <path d="M300.5 287.0 Q327.5 306.0 359.5 308.0" />
+                  <path d="M330 382 Q318 352 285 322" />
+                  <path d="M600 382 Q590 350 560 325" />
+                </g>
+              </svg>
+
+              <!-- 10 位受访者的真实照片，圆形裁切、大小各不相同 -->
+              <div class="rsp-at rsp-face rsp-face-lead" style="--x: 39.75%; --y: 24%; --w: 13%; --d: 0;">
+                <img src="../assets/work/rise-streak/user1.png" alt="" loading="lazy" decoding="async" />
+              </div>
+              <div class="rsp-at rsp-face" style="--x: 53.75%; --y: 12%; --w: 9%; --d: 1;">
+                <img src="../assets/work/rise-streak/user2.png" alt="" loading="lazy" decoding="async" />
+              </div>
+              <div class="rsp-at rsp-face" style="--x: 28.75%; --y: 14%; --w: 8%; --d: 2;">
+                <img src="../assets/work/rise-streak/user3.png" alt="" loading="lazy" decoding="async" />
+              </div>
+              <div class="rsp-at rsp-face" style="--x: 63.75%; --y: 30%; --w: 10%; --d: 3;">
+                <img src="../assets/work/rise-streak/user4.png" alt="" loading="lazy" decoding="async" />
+              </div>
+              <div class="rsp-at rsp-face" style="--x: 20.75%; --y: 34%; --w: 9.5%; --d: 4;">
+                <img src="../assets/work/rise-streak/user5.png" alt="" loading="lazy" decoding="async" />
+              </div>
+              <div class="rsp-at rsp-face" style="--x: 50.75%; --y: 42%; --w: 8.5%; --d: 5;">
+                <img src="../assets/work/rise-streak/user6.png" alt="" loading="lazy" decoding="async" />
+              </div>
+              <div class="rsp-at rsp-face" style="--x: 35.75%; --y: 43%; --w: 7%; --d: 6;">
+                <img src="../assets/work/rise-streak/user7.png" alt="" loading="lazy" decoding="async" />
+              </div>
+              <div class="rsp-at rsp-face" style="--x: 73.75%; --y: 14%; --w: 6.5%; --d: 7;">
+                <img src="../assets/work/rise-streak/user8.png" alt="" loading="lazy" decoding="async" />
+              </div>
+              <div class="rsp-at rsp-face" style="--x: 12.75%; --y: 16%; --w: 6%; --d: 8;">
+                <img src="../assets/work/rise-streak/user9.png" alt="" loading="lazy" decoding="async" />
+              </div>
+              <div class="rsp-at rsp-face" style="--x: 79.75%; --y: 40%; --w: 7.5%; --d: 9;">
+                <img src="../assets/work/rise-streak/user10.png" alt="" loading="lazy" decoding="async" />
+              </div>
+
+              <!-- 两个 oversized data point：数字大、label 很小，
+                   分列人物簇下方两侧，不是独立统计模块 -->
+              <div class="rsp-at rsp-stat" style="--x: 29%; --y: 58%; --w: 16%; --d: 10;">
+                <span class="rsp-stat-num" data-count="5">0</span>
+                <span class="rsp-stat-label">User Interviews</span>
+              </div>
+              <div class="rsp-at rsp-stat" style="--x: 53%; --y: 58%; --w: 20%; --d: 11;">
+                <span class="rsp-stat-num" data-count="38">0</span>
+                <span class="rsp-stat-label">Survey Responses</span>
+              </div>
+            </div>
+
+            <!-- 三条 finding：在数字下面一行并排，只有 icon + 文字，
+                 没有横线、没有卡片。icon 按用户提供的截图重画——月牙、
+                 单独的手机、哭脸，除此之外不加任何多余元素 -->
+            <div class="rsp-notes">
+              <div class="rsp-note">
+                <span class="rsp-note-row">
+                  <span class="rsp-ic">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 14.4A8.6 8.6 0 1 1 10.1 3.5a6.7 6.7 0 0 0 10.5 10.9z"/></svg>
+                  </span>
+                  <span class="rsp-note-text">Not natural early risers</span>
+                </span>
+              </div>
+              <div class="rsp-note">
+                <span class="rsp-note-row">
+                  <span class="rsp-ic">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.8" y="2.4" width="10.4" height="19.2" rx="2.6"/><path d="M10.8 18.7h2.4"/></svg>
+                  </span>
+                  <span class="rsp-note-text">Night phone use is the barrier</span>
+                </span>
+              </div>
+              <div class="rsp-note">
+                <span class="rsp-note-row">
+                  <span class="rsp-ic">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.2"/><path d="M8.6 16.4Q12 13.3 15.4 16.4"/><circle cx="9.1" cy="9.9" r="1.05" fill="currentColor" stroke="none"/><circle cx="14.9" cy="9.9" r="1.05" fill="currentColor" stroke="none"/></svg>
+                  </span>
+                  <span class="rsp-note-text">Encouragement drives success</span>
+                </span>
+              </div>
+            </div>
+
+
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- ══ 03 SOLUTION ══
+             一句话 + 四个手机 UI + 四条极简说明，没别的。
+             不做 card、不写额外 description、不重复解释——让 UI 自己
+             讲故事。黑底 + 现有内容栏 grid，橙色只出现在那一句话里。 -->
+        <section class="case-section" id="solution">
+          <p class="case-kicker">Solution</p>
+
+          <!-- 整段唯一的一句话：标题字号、满亮度高亮，一行读完 -->
+          <p class="case-module rs-sol-line">
+            How might we design a system that supports behavior instead of
+            pressuring it?
+          </p>
+
+          <!-- 四个手机 UI 并排（真实截图，430×949）。每个右下角
+               一行很小的说明，说明这个功能是什么、为什么存在 -->
+          <div class="case-module rs-sol-phones">
+            <figure class="rs-sol-phone">
+              <img src="../assets/work/rise-streak/ui1.png" alt="Rise Streak home screen showing the weekly streak row and today's flame count" loading="lazy" decoding="async" />
+              <figcaption>Positive reinforcement</figcaption>
+            </figure>
+            <figure class="rs-sol-phone">
+              <img src="../assets/work/rise-streak/ui2.png" alt="Rise Streak group screen showing the leaderboard and members' progress" loading="lazy" decoding="async" />
+              <figcaption>Social accountability</figcaption>
+            </figure>
+            <figure class="rs-sol-phone">
+              <img src="../assets/work/rise-streak/ui3.png" alt="Rise Streak friends activity feed" loading="lazy" decoding="async" />
+              <figcaption>Shared encouragement</figcaption>
+            </figure>
+            <figure class="rs-sol-phone">
+              <img src="../assets/work/rise-streak/ui4.png" alt="Rise Streak flame companion screen" loading="lazy" decoding="async" />
+              <figcaption>Emotional support</figcaption>
+            </figure>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- ══ 05 FINAL EXPERIENCE ══
+             全页最重的一屏，分成两部分，阅读逻辑是
+               See the full experience  →  Look closer at the details
+             第一部分：三条完整 user flow 的视频，尺寸给足，是这一屏
+             （也是整页）的主视觉；
+             第二部分：从那三条 flow 里放大三个值得看的设计细节，
+             一张重点 UI/局部 crop + 一句很短的说明，刻意比上面紧凑
+             得多，不重复 flow 已经讲过的内容。
+             两部分之间只用一条细线和一个 mono 小标签分隔，不做卡片。 -->
+        <section class="case-section" id="experience">
+          <p class="case-kicker">Final Experience</p>
+
+          <!-- ── 第一部分：完整 flow（kicker 之后直接进入，没有
+               section 标题——手机 UI 自己说话） ── -->
+          <div class="rs-fx-part rs-fx-part-first">
+            <!-- 三条 flow 各占一整行，视频和文字左右交替：
+                 1 视频左 / 2 视频右 / 3 视频左。文字块滚动进入时
+                 逐行揭示（js/case-rise-streak.js）。
+                 视频已统一转成 H.264、2 倍速、无音轨（源文件是 HEVC
+                 的 .MOV，原稿保留在同目录未动）。每个 <video> 自带
+                 --vr（各自的原始宽高比），避免 metadata 到达前跳版 -->
+            <div class="case-module case-module-no-reveal rs-fx-flows">
+              <div class="rs-fx-row">
+                <div class="rs-fx-media">
+                  <video src="../assets/work/rise-streak/flow1.mp4" style="--vr: 960 / 1920;"
+                         autoplay muted loop playsinline preload="metadata"></video>
+                </div>
+                <div class="rs-fx-copy">
+                  <p class="rs-fx-eyebrow">Flow 1</p>
+                  <h3 class="rs-fx-title">Preparing for tomorrow</h3>
+                  <ul class="rs-fx-steps">
+                  <li class="rs-fx-step">
+                    <span class="rs-fx-step-do">Set wake-up time</span>
+                    <span class="rs-fx-step-arrow" aria-hidden="true">&#8594;</span>
+                    <span class="rs-fx-step-why">same time, every day</span>
+                  </li>
+                  <li class="rs-fx-step">
+                    <span class="rs-fx-step-do">Choose routine</span>
+                    <span class="rs-fx-step-arrow" aria-hidden="true">&#8594;</span>
+                    <span class="rs-fx-step-why">one less thing to decide</span>
+                  </li>
+                  </ul>
+                  <!-- 对应这条 flow 的 Figma 原型（新标签页打开） -->
+                  <a class="rs-fx-viewflow" href="https://www.figma.com/proto/w9fSzeaLoXo6eVjQfl0d4J/Risestreak-Final-Prototype?node-id=1-354&amp;p=f&amp;viewport=-282%2C444%2C0.28&amp;t=uCVYylwBO63cog6u-1&amp;scaling=scale-down&amp;content-scaling=fixed&amp;starting-point-node-id=1%3A354&amp;show-proto-sidebar=1&amp;page-id=0%3A1" target="_blank" rel="noopener">View flow <span aria-hidden="true">&#8594;</span></a>
+                </div>
+              </div>
+
+              <div class="rs-fx-row rs-fx-row-alt">
+                <div class="rs-fx-media">
+                  <video src="../assets/work/rise-streak/flow2.mp4" style="--vr: 960 / 1920;"
+                         autoplay muted loop playsinline preload="metadata"></video>
+                </div>
+                <div class="rs-fx-copy">
+                  <p class="rs-fx-eyebrow">Flow 2</p>
+                  <h3 class="rs-fx-title">Morning check-in</h3>
+                  <ul class="rs-fx-steps">
+                  <li class="rs-fx-step">
+                    <span class="rs-fx-step-do">Wake up</span>
+                    <span class="rs-fx-step-arrow" aria-hidden="true">&#8594;</span>
+                    <span class="rs-fx-step-why">the cue that starts the day</span>
+                  </li>
+                  <li class="rs-fx-step">
+                    <span class="rs-fx-step-do">Check status</span>
+                    <span class="rs-fx-step-arrow" aria-hidden="true">&#8594;</span>
+                    <span class="rs-fx-step-why">you know right away</span>
+                  </li>
+                  <li class="rs-fx-step">
+                    <span class="rs-fx-step-do">Log progress</span>
+                    <span class="rs-fx-step-arrow" aria-hidden="true">&#8594;</span>
+                    <span class="rs-fx-step-why">the streak grows</span>
+                  </li>
+                  </ul>
+                  <!-- 对应这条 flow 的 Figma 原型（新标签页打开） -->
+                  <a class="rs-fx-viewflow" href="https://www.figma.com/proto/w9fSzeaLoXo6eVjQfl0d4J/Risestreak-Final-Prototype?node-id=2021-333&amp;p=f&amp;viewport=-282%2C444%2C0.28&amp;t=uCVYylwBO63cog6u-1&amp;scaling=scale-down&amp;content-scaling=fixed&amp;starting-point-node-id=2021%3A333&amp;show-proto-sidebar=1&amp;page-id=0%3A1" target="_blank" rel="noopener">View flow <span aria-hidden="true">&#8594;</span></a>
+                </div>
+              </div>
+
+              <div class="rs-fx-row">
+                <div class="rs-fx-media">
+                  <video src="../assets/work/rise-streak/flow3.mp4" style="--vr: 1002 / 1920;"
+                         autoplay muted loop playsinline preload="metadata"></video>
+                </div>
+                <div class="rs-fx-copy">
+                  <p class="rs-fx-eyebrow">Flow 3</p>
+                  <h3 class="rs-fx-title">Social motivation</h3>
+                  <ul class="rs-fx-steps">
+                  <li class="rs-fx-step">
+                    <span class="rs-fx-step-do">View group</span>
+                    <span class="rs-fx-step-arrow" aria-hidden="true">&#8594;</span>
+                    <span class="rs-fx-step-why">you can see who else is up</span>
+                  </li>
+                  <li class="rs-fx-step">
+                    <span class="rs-fx-step-do">See ranking</span>
+                    <span class="rs-fx-step-arrow" aria-hidden="true">&#8594;</span>
+                    <span class="rs-fx-step-why">a nudge, not a scoreboard</span>
+                  </li>
+                  <li class="rs-fx-step">
+                    <span class="rs-fx-step-do">Receive encouragement</span>
+                    <span class="rs-fx-step-arrow" aria-hidden="true">&#8594;</span>
+                    <span class="rs-fx-step-why">someone noticed</span>
+                  </li>
+                  </ul>
+                  <!-- 对应这条 flow 的 Figma 原型（新标签页打开） -->
+                  <a class="rs-fx-viewflow" href="https://www.figma.com/proto/w9fSzeaLoXo6eVjQfl0d4J/Risestreak-Final-Prototype?node-id=185-550&amp;p=f&amp;viewport=-282%2C444%2C0.28&amp;t=uCVYylwBO63cog6u-1&amp;scaling=scale-down&amp;content-scaling=fixed&amp;starting-point-node-id=185%3A550&amp;show-proto-sidebar=1&amp;page-id=0%3A1" target="_blank" rel="noopener">View flow <span aria-hidden="true">&#8594;</span></a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 第二部分：三个设计细节，一排三个、等高 ──
+               01 Rewards（竖屏视频）/ 02 Support（竖屏视频，保留声音，
+               PLAY WITH SOUND 解除静音）/ 03 Encouragement（透明组件，
+               无背景无手机壳）。列宽 = 各自媒体的宽高比，渲染高度
+               严格相等 -->
+          <div class="rs-fx-part">
+            <div class="case-module rs-fxd-row">
+              <figure class="rs-fxd-item" style="--dr: 708 / 1452;">
+                <p class="rs-fxd-tag"><span class="rs-fxd-num">01</span>Emotional Rewards</p>
+                <video src="../assets/work/rise-streak/detail1.mp4" autoplay muted loop playsinline preload="metadata"></video>
+              </figure>
+              <figure class="rs-fxd-item rs-fxd-item-sound" style="--dr: 960 / 1920;">
+                <p class="rs-fxd-tag">
+                  <span class="rs-fxd-num">02</span>Flame Companion
+                  <button class="rs-fxd-sound" id="rs-companion-sound" type="button" aria-label="Play with sound" title="Play with sound">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path class="rs-snd-body" d="M4.5 9.6v4.8h3.2l4.6 3.9V5.7L7.7 9.6z" />
+                      <path class="rs-snd-wave" d="M15.6 9.3a4.1 4.1 0 0 1 0 5.4M18 7.2a7.2 7.2 0 0 1 0 9.6" />
+                      <line class="rs-snd-slash" x1="15.2" y1="9.2" x2="20.4" y2="14.8" />
+                    </svg>
+                  </button>
+                </p>
+                <video id="rs-companion-video" src="../assets/work/rise-streak/detail3.mp4" autoplay muted loop playsinline preload="metadata"></video>
+              </figure>
+              <figure class="rs-fxd-item" style="--dr: 1254 / 765;">
+                <p class="rs-fxd-tag"><span class="rs-fxd-num">03</span>Group Momentum</p>
+                <img src="../assets/work/rise-streak/detail2%E7%BB%84%E4%BB%B6.png" alt="Fitness Tribe group component with the mascot cheering a member on" loading="lazy" decoding="async" />
+              </figure>
+            </div>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- ══ 06 DESIGN SYSTEM ══
+             紧跟在 Final Experience 之后：先看完实际体验，再回头看
+             支撑它的那套系统。三行紧凑排布（Color / Type / Elements），
+             和页面其余部分同一套语言——黑底、无卡片、mono 小标签、
+             层级只靠字号和亮度。
+             色值全部从真实 UI 截图里取样得来（ui1–ui4.png），不是
+             凭印象编的。 -->
+        <!-- ══ 06 DESIGN SYSTEM ══
+             排版按用户提供的 spec 版式：
+               第一排 COLOR | TYPE —— 很矮，像真正的 design spec
+               第二排 LOGO(25%) | MASCOT(75%) —— 整段最大的一块，
+                      九个吉祥物状态是品牌色重着色版（橙身 #FDA739 +
+                      深橙描边 #F1642E，由线稿 SVG 程序化生成），
+                      直接站在黑底上，没有底板
+               第三排 ICONS —— 小尺寸一条收尾
+             标题只有 COLOR / TYPE / LOGO / MASCOT / ICONS 五个 mono
+             小标签，没有任何多余的描述文字。 -->
+        <section class="case-section" id="system">
+          <p class="case-kicker">Design System</p>
+
+          <!-- 第一排：COLOR | TYPE -->
+          <div class="case-module rs-ds-r1">
+            <div class="rs-ds-block">
+              <p class="rs-label">Color</p>
+              <div class="rs-ds-colors">
+                <div class="rs-ds-swatch">
+                  <span class="rs-ds-chip" style="background: #fda739;"></span>
+                  <span class="rs-ds-hex">#FDA739</span>
+                </div>
+                <div class="rs-ds-swatch">
+                  <span class="rs-ds-chip" style="background: #faf8f5;"></span>
+                  <span class="rs-ds-hex">#FAF8F5</span>
+                </div>
+                <div class="rs-ds-swatch">
+                  <span class="rs-ds-chip" style="background: #d2eb88;"></span>
+                  <span class="rs-ds-hex">#D2EB88</span>
+                </div>
+                <div class="rs-ds-swatch">
+                  <span class="rs-ds-chip" style="background: #1a1a1a;"></span>
+                  <span class="rs-ds-hex">#1A1A1A</span>
+                </div>
+              </div>
+            </div>
+            <div class="rs-ds-block">
+              <p class="rs-label">Type</p>
+              <div class="rs-ds-type">
+                <div class="rs-ds-font">
+                  <p class="rs-ds-font-name rs-ds-font-kanit">Kanit</p>
+                  <p class="rs-ds-font-note">Headings &amp; Display</p>
+                  <p class="rs-ds-font-spec">Semibold &middot; 17px</p>
+                </div>
+                <div class="rs-ds-font">
+                  <p class="rs-ds-font-name rs-ds-font-sf">SF Compact Text</p>
+                  <p class="rs-ds-font-note">Body &amp; Interface</p>
+                  <p class="rs-ds-font-spec">Semibold &middot; 13px</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 第二排：ICONS(4×4) | MASCOT(3×3)，顶部对齐，中间竖分割线 -->
+          <div class="case-module rs-ds-r2">
+            <div class="rs-ds-block">
+              <p class="rs-label">Icons</p>
+              <!-- 16 个界面 icon，规整的 4×4 小网格 -->
+              <div class="rs-ds-icon-grid" role="img" aria-label="Interface icon set">
+                <img class="rs-ic-snug" src="../assets/work/rise-streak/icons/Group%201040.svg" alt="" loading="lazy" decoding="async" />
+                <img class="rs-ic-snug" src="../assets/work/rise-streak/icons/Group%20433.svg" alt="" loading="lazy" decoding="async" />
+                <img class="rs-ic-snug" src="../assets/work/rise-streak/icons/Group%20445.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/icons/airplane.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/icons/book.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/icons/buliding.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/icons/coffee.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/icons/cup.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/icons/dollar-circle.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/icons/home-2.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/icons/mouse.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/icons/pet.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/icons/weight.svg" alt="" loading="lazy" decoding="async" />
+                <img class="rs-ic-tight" src="../assets/work/rise-streak/icons/Group%20476.svg" alt="" loading="lazy" decoding="async" />
+                <img class="rs-ic-tight" src="../assets/work/rise-streak/icons/Group%20673.svg" alt="" loading="lazy" decoding="async" />
+                <img class="rs-ic-tight" src="../assets/work/rise-streak/icons/Vector.svg" alt="" loading="lazy" decoding="async" />
+              </div>
+            </div>
+            <div class="rs-ds-block">
+              <p class="rs-label">Mascot</p>
+              <div class="rs-ds-mascots" role="img" aria-label="Nine expression states of the flame mascot">
+                <img src="../assets/work/rise-streak/mascot1.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/mascot2.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/mascot3.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/mascot4.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/mascot5.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/mascot6.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/mascot7.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/mascot8.svg" alt="" loading="lazy" decoding="async" />
+                <img src="../assets/work/rise-streak/mascot9.svg" alt="" loading="lazy" decoding="async" />
+              </div>
+            </div>
+          </div>
+
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- ══ 07 BEFORE AND AFTER ══
+             原 presentation 里 Home 和 Group 两套 before/after 合并成
+             这一个 section，每一格只留一个状态名 + 一行说明，不再有
+             两套长 bullet points。
+             原 Result section 不再单独做——它想说的已经由这组对照
+             表达完了，再放一遍是重复。 -->
+        <section class="case-section" id="before-after">
+          <p class="case-kicker">Testing</p>
+
+          <!-- 两组设计迭代，上下排列（不再左右塞在一屏里）：
+               每组 = Before 手机 → After 手机 并排，中间一个小箭头。
+               BEFORE 标签白、AFTER 标签品牌橙，图下各一句短说明。
+               静态展示，无卡片无背景，左对齐 -->
+          <div class="case-module rs-ba">
+            <p class="rs-label">Home</p>
+            <div class="rs-ba-pair">
+              <figure class="rs-ba-item">
+                <p class="rs-ba-tag">Before</p>
+                <img src="../assets/work/rise-streak/home%20before.png" style="max-width: 440px;" alt="Home screen before: a static progress list" loading="lazy" decoding="async" />
+                <figcaption style="padding-right: 4.99%;">Static tracking.</figcaption>
+              </figure>
+              <span class="rs-ba-arrow" aria-hidden="true">&#8594;</span>
+              <figure class="rs-ba-item">
+                <p class="rs-ba-tag rs-ba-tag-after">After</p>
+                <img src="../assets/work/rise-streak/home%20after.png" style="max-width: 440px;" alt="Home screen after: streaks, flames and visual rewards" loading="lazy" decoding="async" />
+                <figcaption style="padding-right: 4.61%;">Progress you can feel.</figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <div class="case-module rs-ba">
+            <p class="rs-label">Rank</p>
+            <div class="rs-ba-pair">
+              <figure class="rs-ba-item">
+                <p class="rs-ba-tag">Before</p>
+                <img src="../assets/work/rise-streak/rankbefore.png" style="max-width: 208.6px;" alt="Ranking screen before: plain numbers" loading="lazy" decoding="async" />
+                <figcaption>Just numbers.</figcaption>
+              </figure>
+              <span class="rs-ba-arrow" aria-hidden="true">&#8594;</span>
+              <figure class="rs-ba-item">
+                <p class="rs-ba-tag rs-ba-tag-after">After</p>
+                <img src="../assets/work/rise-streak/rankafter.png" style="max-width: 204.6px;" alt="Ranking screen after: a leaderboard with the mascot" loading="lazy" decoding="async" />
+                <figcaption>See where you stand.</figcaption>
+              </figure>
+            </div>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- ══ 09 ENDING ══
+             原 Conclusion / Thank You 两页都删掉了——portfolio case study
+             不再重复总结整个项目。这里只留一句大的 closing statement
+             和吉祥物视觉，然后直接进入全站统一的 Next Project。 -->
+        <section class="case-section rs-closing" id="closing">
+          <p class="case-kicker">Campaign</p>
+          <div class="case-module rs-closing-visual">
+            <img src="../assets/work/rise-streak/campaign.jpg" alt="Rise Streak brand campaign visual with the flame mascot" loading="lazy" decoding="async" />
+          </div>
+          <!-- 收束句：图片右下角，正文字号、次级档 -->
+          <p class="rs-closing-line">Support, not pressure.</p>
+        </section>
+      </div>
+    </div>
+    </div>
+
+    <!-- 结尾退场的滚动行程（模板机制，和其它 case 页一致） -->
+    <div class="case-ending-spacer" id="ending-spacer" aria-hidden="true"></div>
+
+    <!-- Next Project + Contact：完全复用模板。Rise Streak 是最新的
+         项目（2026），按年份序下一个是 Step Inside Tomorrow，但那一页
+         还没建——先指向下一个已存在的 case（SVP），等 Step Inside
+         Tomorrow 的页面做好再把这两个 href 和预览图换过去。 -->
+    <section class="case-ending" id="case-next">
+      <div class="case-ending-inner">
+        <div class="case-ending-row">
+          <div class="case-ending-col-main">
+            <div class="case-ending-next">
+            <span class="case-kicker case-ending-reveal">Next Up</span>
+            <a class="case-ending-next-link" href="step-inside-tomorrow.html">
+            <span class="case-ending-next-title case-ending-reveal">Step Inside Tomorrow</span>
+            <span class="case-ending-next-tagline case-ending-reveal">Step inside the news.</span>
+            </a>
+            </div>
+            <div class="case-ending-rule case-ending-reveal" aria-hidden="true"></div>
+            <div class="case-ending-contact case-ending-reveal">
+              <p class="case-ending-heading">Working on something?</p>
+              <p class="case-ending-sub">Tell me about it. I answer every message.</p>
+              <a class="case-ending-cta" href="mailto:yinzhaolei1113@gmail.com">GET IN TOUCH &#8599;</a>
+            </div>
+          </div>
+          <div class="case-ending-preview">
+            <a class="case-view-all case-ending-reveal" href="../index.html#work">[ VIEW ALL PROJECTS ]</a>
+            <a class="case-ending-preview-link" href="step-inside-tomorrow.html">
+              <div class="case-ending-preview-image">
+                <video src="../assets/work/step-inside-tomorrow/hero.mp4" autoplay muted loop playsinline preload="metadata"></video>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../vendor/gsap/gsap.min.js"></script>
+  <script src="../vendor/gsap/ScrollTrigger.min.js"></script>
+  <script src="../js/gsap-init.js"></script>
+  <script src="../js/site-chrome.js"></script>
+  <!-- 进场过渡第二段：morph 到 Hero 真实位置（放在 case.js 之前） -->
+  <script src="../js/case-enter.js"></script>
+  <script src="../js/case.js"></script>
+  <!-- 只服务这一个 case 的行为（The Problem 构图的分层揭示 +
+       数字计数 + 轻微浮动），不进通用 js/case.js -->
+  <script src="../js/case-rise-streak.js"></script>
+</body>
+</html>

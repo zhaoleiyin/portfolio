@@ -1,0 +1,852 @@
+/* ══════════════════════════════════════════════════
+   Case Detail Page 通用模板：左侧 sticky 信息栏 + 右侧
+   editorial storytelling 内容 + 结尾 Next Project/CTA。
+   所有 case（duolingo、之后陆续加入的其它 case）共用这一份
+   样式表——case 之间的差异只来自各自 HTML 里放的模块内容，
+   这里只定义可复用的 grid/间距/字号/模块外观。
+   Design tokens 沿用 hero.css/about.css/work.css 已有的那一套
+   （#f2f2f2 / #0a0a0a / --font-sans / --font-mono / --pad-x），
+   不引入新的视觉语言。
+   ══════════════════════════════════════════════════ */
+
+.case {
+  position: relative;
+  background: #0a0a0a;
+  color: #f2f2f2;
+
+  /* 全站 Case Study 的次级文字透明度，单一来源。
+     标题/section 标题保持满亮度，description / body copy 一律降到
+     这一档——不在各个 case 里分别手写数字，否则同样是"说明文字"
+     却各页深浅不一。数值取自 Duolingo 里 supporting text 原本就在
+     用的量级 */
+  --case-text-secondary-opacity: 0.58;
+
+  /* ══ 全站 Case Study 内容区的唯一间距 ══
+     所有 case 的正文区里，元素与元素之间只有这一个距离：
+     图片↔图片、图片组↔图片组、文字↔文字、文字↔图片、模块↔模块、
+     section↔section 全部用它，各个 case 不再自己定别的数值。
+
+     分割线也走这一格，不再有自己的上下 margin——.case-divider 就是
+     参与同一套节奏的一个普通块，所以是
+       上一块内容 → 7px → divider → 7px → 下一块内容。
+
+     取值经过：先按 sidebar 目录的实测间距试过 4.8px，太挤；现在定在
+     7px。下面 .case-toc 也引用同一个 token，侧栏和正文永远一个节奏。
+
+     不归它管的（明确保留、不参与统一）：
+       · 页面左右 padding、sidebar 宽度、内容总宽度
+       · sidebar 内部标题层级的 em 间距
+       · "标签栏 ↔ 内容栏"分栏结构的横向 gutter（.case-persona /
+         .case-section-head / .case-problem 的 4vw，和 .case-layout
+         的 3vw 同类，属于版心结构而不是内容间距）
+       · 行内标签间距（.case-list-item、figcaption 的 em 值）
+       · 结尾 Next Project 区块 .case-ending*（在 .case-content 之外，
+         是单独 spec 过的收尾构图）*/
+  --case-gap: 7px;
+}
+
+/* ── 主体：左侧 sticky 信息栏（约 21%）+ 右侧内容（约 79%） ── */
+.case-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 3vw;
+  padding: 0 var(--pad-x, 4.2%);
+  /* 顶部留白：明显收紧过（原来 18vh→120px），又再往上收了一点。
+     只留导航栏下方一段舒适的呼吸感，不做成大片黑色空白。这个值同时
+     决定了 Hero 图片的起始位置——侧栏用下面 flex-start + 同样的
+     sticky top 值，让标题区顶部和 Hero 顶部严格对齐 */
+  padding-top: 96px;
+}
+
+.case-sidebar {
+  position: sticky;
+  /* 吸顶后停在导航栏（64px）下方一点点，不是贴着视口最顶端——
+     否则滚动够远之后侧栏文字会被固定导航栏盖住。吸顶之前（页面刚
+     加载、.case-layout 的顶部留白还没被滚动吃掉那段），这个 top
+     值不生效，侧栏走正常文档流，起点正好和右侧 Hero 图片顶部对齐 */
+  top: 72px;
+  flex: 0 0 21%;
+  min-width: 240px;
+  height: calc(100vh - 72px);
+  display: flex;
+  align-items: flex-start; /* 内容顶对齐，不再纵向居中——配合上面的
+     padding-top，让标题区顶部和右侧 Hero 图片顶部严格对齐 */
+}
+.case-sidebar-inner {
+  width: 100%;
+  font-family: var(--font-sans, "Geist", sans-serif);
+}
+.case-kicker {
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(11px, 0.8vw, 13px);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8c8c86;
+}
+.case-title {
+  margin-top: 0.15em;
+  font-size: clamp(26px, 2.2vw, 36px);
+  font-weight: 500;
+  line-height: 1.15;
+}
+.case-tagline {
+  margin-top: 0.35em;
+  font-size: clamp(15px, 1.05vw, 18px);
+  line-height: 1.5;
+  color: #c8c8c2;
+}
+.case-meta {
+  margin-top: 0.7em;
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(11px, 0.8vw, 13px);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #8c8c86;
+}
+/* 项目信息不止一行时（比如署名 + 类别·年份两行），第二行紧跟第一行，
+   不用再隔一次 0.7em——那是给"标题→第一行 meta"这段关系用的间距 */
+.case-meta + .case-meta {
+  margin-top: 0.2em;
+}
+
+/* 目录：当前 section 对应项 opacity:1，其余降到一个弱化但仍可读的
+   亮度——js/case.js 用 IntersectionObserver 切 .is-active，
+   过渡手法和 .site-nav-links a 的 hover opacity 一致。
+   gap/margin-top 比最初版本收紧了一些——侧栏在吸顶之前（页面刚
+   加载、还没开始滚动那一刻）是在 .case-layout 的顶部留白之下
+   居中，可用高度比真正吸顶后的整个 100vh 视口要少；Duolingo 这次
+   目录多到 10 项，用原来更松的间距会在刚进入页面时把最后几项顶到
+   视口以下、和底栏重叠，收紧这里让它在滚动吸顶前也能完整放下 */
+.case-toc {
+  margin-top: 1.4em;
+  display: flex;
+  flex-direction: column;
+  /* 这里就是 --case-gap 的来源本身 */
+  gap: var(--case-gap);
+}
+.case-toc a {
+  color: inherit;
+  text-decoration: none;
+  font-size: clamp(14px, 1vw, 16px);
+  opacity: 0.4;
+  transition: opacity 0.35s ease;
+}
+.case-toc a.is-active {
+  opacity: 1;
+}
+.case-toc a:hover {
+  opacity: 0.75;
+}
+
+/* ── 右侧内容：editorial 模块纵向排列 ──
+   这里原本按"谁接谁"分了七八档不同的间距（3/5/6/7/8/11/12/18/20px），
+   意图是让不同的相邻关系有不同的呼吸感。结果是三个 case 各自又在
+   自己的样式表里加了 20/24/28/32/48px，同一个网站里同样是"图片接
+   图片"却好几个值，滚起来节奏对不上。
+   现在全部收敛成一个 --case-gap。下面这一组相邻选择器仍然保留，
+   但它们不再决定"多大"，只决定"谁和谁之间要有这一格距离"——
+   语义还在，数值只有一个来源。
+   同样不用 vh、不用 min-height 撑高任何 section，section 的高度
+   仍然完全由内容自己决定 ── */
+.case-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  /* 主内容收尾的安全留白：最后一个 section 和固定 Footer 之间
+     留出明确的黑色分层（约 80–100px），内容不贴着 Footer、
+     Footer 也不会看起来像 case 内容的一部分。全部 case 统一，
+     不放进任何图片内部 */
+  padding-bottom: 96px;
+}
+.case-section {
+  padding: 0;
+}
+
+/* Section 接缝：一条很细、低对比度的分隔线，只出现在右侧内容列
+   （<hr> 是 .case-content 的直接子元素，天然不会跨到左侧 sticky
+   sidebar），标记"上一个 section 结束、下一个开始"。颜色沿用站内
+   已经在用的分隔线灰（.case-ending 的 border-top 同一个值），
+   不是白色高亮线。上下 margin 原本是不对称的 20/18，现在两边都用
+   同一个 --case-gap——"section 到 section"和"图片到图片"是同一格
+   距离，这正是这次要的连续节奏 */
+.case-divider {
+  border: none;
+  height: 1px;
+  background: #222220;
+  margin: var(--case-gap) 0;
+}
+
+.case-module {
+  width: 100%;
+}
+.case-module img,
+.case-module video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 模块之间的默认间距（媒体接媒体、大字块接列表/步骤这类"没有独立
+   正文段落"的情况）；列表/步骤本身算作正文分量，紧接在它们后面的
+   媒体模块需要比这个更大的间距，见后面的覆盖规则。图片和图片之间
+   不用大量黑色空间隔开，所以这个值本身就偏紧凑 */
+.case-module + .case-module {
+  margin-top: var(--case-gap);
+}
+.case-list.case-module + .case-module,
+.case-steps.case-module + .case-module {
+  margin-top: var(--case-gap);
+}
+
+/* 标题(kicker) → 内容模块／模块 → 行内小标题（比如 Prototype 里
+   "See the Prototype" 这种紧跟在媒体后面的小标签） */
+.case-kicker + .case-module,
+.case-module + .case-kicker {
+  margin-top: var(--case-gap);
+}
+/* 小标题直接接正文（case-steps 内部的 Problem/User Need/How Might
+   We，以及 Prototype 里 "See the Prototype" 后面那句话）：间距要
+   小很多，读起来像标签贴着它说明的文字，不是另起一段 */
+.case-kicker + .case-caption {
+  margin-top: var(--case-gap);
+}
+
+/* 媒体模块 → 正文（比如 Persona 的 Findings 列表接下面的 motivation
+   一句话）；大字块 → 正文 的间距要更紧一些，单独覆盖 */
+.case-module + .case-caption {
+  margin-top: var(--case-gap);
+}
+.case-module-typography + .case-caption {
+  margin-top: var(--case-gap);
+}
+/* 正文 → 下一个小标题（比如 Research 里 intro 一段接 "Key
+   Findings"）：和"正文→媒体"同一个量级，都是"进入下一块视觉内容"
+   前的呼吸点 */
+.case-caption + .case-kicker {
+  margin-top: var(--case-gap);
+}
+
+/* 正文段落连续出现（Prototype 结尾 Reflection + Next Step 两段）：
+   当成同一块正文的延续，间距最小 */
+.case-caption + .case-caption {
+  margin-top: var(--case-gap);
+}
+/* 正文 → 媒体模块：默认给足呼吸感；但如果正文后面接的是列表/步骤
+   （比如 Research 的 intro 一段接 Findings 列表），那仍然是正文的
+   延续，不是真的进入了"媒体"，间距收紧，单独覆盖 */
+.case-caption + .case-module {
+  margin-top: var(--case-gap);
+}
+.case-caption + .case-list.case-module,
+.case-caption + .case-steps.case-module {
+  margin-top: var(--case-gap);
+}
+
+/* Full-width Hero：Overview 顶部，跳转过来的 shared-element 落点。
+   view-transition-name 要和 css/work.css 里 #work-media-duolingo
+   用同一个名字，浏览器才会把两边当成同一个元素做 morph 过渡 */
+.case-module-hero {
+  border-radius: 0; /* 和 .work-media 一样的硬边矩形语言 */
+  overflow: hidden;
+  background: #141414;
+}
+#case-hero-media {
+  view-transition-name: duolingo-hero;
+}
+.case-module-hero video,
+.case-module-hero img {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+/* Overview 说明文字：不再横跨整栏宽度，收成 Hero 右下方一小块、
+   靠右摆放（margin-left: auto 把它推到内容列的右边），左边留出
+   大片黑色负空间——目的是让 Hero 图片本身继续是这个 section 唯一
+   的视觉重心，说明文字只是补充信息，不跟 Hero 抢注意力。段落本身
+   还是正常的左对齐阅读，只是整块容器靠右——不是每行文字都右对齐
+   （那样长句子会很难读） */
+.case-overview {
+  margin-top: var(--case-gap);
+  max-width: 42%;
+  margin-left: auto;
+}
+.case-overview .case-caption {
+  /* 现在这段说明文字是 .case-overview 里唯一的内容（不再带
+     "Overview" 标签），不需要额外的顶部间距 */
+  max-width: none;
+  /* Hero 下方这段是典型的 description：降到次级亮度，别和标题抢。
+     Duolingo 的 Hero 说明和 Chicken 5 Road 的 Overview / Identity
+     引言用的都是这个组件，所以两边天然完全一致 */
+  opacity: var(--case-text-secondary-opacity);
+}
+.case-caption {
+  /* 间距全部交给上面那组相邻选择器规则处理，这里不设默认
+     margin-top——同一个 .case-caption 出现在不同上下文里需要的
+     间距不一样（接在大字块后面 vs 接在媒体后面 vs 连续段落），
+     不能用一个统一的值 */
+  max-width: 42em;
+  font-size: clamp(15px, 1.05vw, 19px);
+  line-height: 1.6;
+  color: #c8c8c2;
+}
+
+/* Typography-led 大字块：pull-quote 式，文字本身就是这个模块的视觉 */
+.case-module-typography {
+  max-width: 26em;
+}
+.case-pull-quote {
+  font-size: clamp(24px, 2.6vw, 44px);
+  line-height: 1.32;
+  font-weight: 500;
+  letter-spacing: 0.002em;
+  color: #f2f2f2;
+}
+
+/* 紧凑短列表：给 findings / principles / goals·needs·pain points /
+   flow steps / deliverables 这类"几条短内容"用的文字排版，不是新的
+   media module，只是 case-caption 那套字号体系的一个变体——避免把
+   每一条都单独撑成一个 section、破坏整体的留白节奏 */
+.case-list {
+  max-width: 42em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--case-gap);
+}
+.case-list-item {
+  display: flex;
+  gap: 1em;
+}
+.case-list-index {
+  flex: 0 0 auto;
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(11px, 0.8vw, 13px);
+  color: #6a6a64;
+  padding-top: 0.3em;
+}
+.case-list-item strong {
+  font-weight: 500;
+  color: #f2f2f2;
+}
+.case-list-item > span {
+  display: block;
+  font-size: clamp(14px, 1vw, 16px);
+  line-height: 1.55;
+  color: #c8c8c2;
+}
+
+/* Problem → User Need → How Might We 这类顺序推进的短论述：
+   同一套 kicker + caption 字号，靠间距体现"一步步推进"，
+   不引入额外的箭头/连接线图形 */
+.case-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--case-gap);
+  max-width: 32em;
+}
+/* 每一步自己的 kicker → 说明文字，间距交给上面
+   .case-kicker + .case-caption 那条规则统一处理 */
+
+/* Two-column images */
+.case-module-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--case-gap);
+}
+
+/* Full-bleed visual：贴到视口两侧边缘，脱离左侧信息栏留出的缩进 */
+.case-module-fullbleed {
+  margin-left: calc(-1 * var(--pad-x, 4.2%));
+  margin-right: calc(-1 * var(--pad-x, 4.2%));
+  width: calc(100% + 2 * var(--pad-x, 4.2%));
+}
+
+/* Mockups / Prototype：一大一小两个位，不是等大堆叠 */
+.case-module-mockup {
+  aspect-ratio: 16 / 10;
+}
+.case-module-prototype {
+  max-width: 60%;
+}
+
+/* Outcome：复用 work.css 里 .work-tag 组件的视觉（logo + 文字），
+   在这里作为收尾信息卡，不重新发明一套样式 */
+.case-module-outcome {
+  padding: 2.4em 2.6em;
+  background: #111111;
+}
+/* .work-tag 在 work.css 里是 position:absolute; top:40vh（配合 Work
+   页那个固定高度的 editorial grid 文字块写死的定位），原样搬进这里
+   会直接飞出 .case-module-outcome 的框、跑到跟视口无关的位置——
+   这里只要它的视觉（flex 排布的 icon+文字），把定位属性重置掉，
+   让它老老实实回到正常文档流里 */
+.case-module-outcome .work-tag {
+  position: static;
+  top: auto;
+  left: auto;
+}
+
+/* 素材未就位时的占位块：虚线边框 + 居中提示文字，明确标注"这里该有
+   真实图片"，不会被误认成素材加载失败——背景色沿用 .work-media 的
+   占位底色 #141414，是站内已有的语言 */
+.case-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32vh;
+  background: #141414;
+  border: 1px dashed #3a3a36;
+  color: #6a6a64;
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(11px, 0.8vw, 13px);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.case-module-two-col .case-placeholder {
+  min-height: 26vh;
+}
+.case-module-prototype .case-placeholder {
+  min-height: 22vh;
+}
+
+/* ── 结尾：Next Project 提示 + Contact 合并成一个紧凑区域，不再是
+   第二个全屏 Hero——参考 Koto 那种"轻量提一下下一个项目 + 联系方式
+   + 小尺寸预览图"的收尾节奏，只是理解它的比例关系，不复制具体视觉。
+   黑底延续现有配色，间距量级和上面正文部分一致（不额外制造大片
+   空白），最底部真正的版权/联系方式交给页面自带的、始终固定在
+   视口底部的 .site-footer（低亮度常驻，滚到页面真正结尾时
+   js/site-chrome.js 会自动把它调亮）——这里不重复做一份 ── */
+.case-ending {
+  border-top: 1px solid #222220;
+  padding: 96px var(--pad-x, 4.2%) 96px;
+  /* 结尾动效里内容会带一点横向位移淡入，位移可能把内容推到视口右边
+     界之外——不裁掉的话整个文档的 scrollWidth 会变大，浏览器就会给
+     整页加一条横向滚动条（页面任何位置都看得到，不只是结尾这一段）。
+     用 overflow-x: clip 而不是 hidden：hidden 会让元素变成滚动容器
+     （overflow-y 被算成 auto），可能影响 sticky 定位；clip 只裁切 */
+  overflow-x: clip;
+}
+
+/* ── 结尾退场（桌面端 + 非 reduced-motion 才由 js/case.js 打开）──
+   .case-pin 被 pin 住（GSAP 内部用 transform，所以我们绝不碰它的
+   transform），.case-page-canvas 才是被平移/调暗的那一层——sidebar
+   和内容都在里面，作为一个整体一起动。
+   .case-ending 变成固定在视口右侧的一层浮层：左边特意留出空白，让
+   向左退场的旧页面继续露出一部分，新旧项目短暂同时存在 ── */
+/* 整段退场只在 <main class="case is-ending-scrubbed"> 时启用（这个类由
+   js/case.js 在桌面端 + 非 reduced-motion 时加上）。默认什么都不做，
+   页面结构和加这套东西之前完全一样。
+
+   canvas 用原生 sticky 停住，而不是 ScrollTrigger 的 pin：
+   sticky + bottom:0 的语义正好是「元素比视口高时，一直正常滚动，直到
+   它的底边碰到视口底边就停住不动」——也就是「整份 case 全部读完之后
+   才停住」，触发点天然正确，不依赖任何需要重算的坐标。
+   更关键的是 sticky 不会往元素上写 transform，所以不会成为内部
+   position:fixed 后代（Experience 那段 sticky video 的 pin）的
+   containing block。这里绝对不能加 will-change: transform，它和真正的
+   transform 一样会制造 containing block，同样会弄坏那段 pin */
+.case.is-ending-scrubbed .case-page-canvas {
+  position: sticky;
+  /* top 的具体数值由 js/case.js 写成 inline style：
+     innerHeight - canvasHeight（一个负值）。
+     这里必须用「负的 top」而不是 bottom:0——对于比视口高的元素，
+     bottom 粘性并不会把它按住（实测 canvas 仍然 1:1 跟着滚走）；
+     负 top 才是高元素的标准做法：元素一直正常滚动，直到它的底边
+     和视口底边对齐就停住，正好等于「整份 case 全部读完才停」 */
+}
+/* 停住之后用来推完退场动画的滚动行程。整段编排有很多阶段（整页左移
+   → 图片从右下角出现 → 图片放大 → 旧页面变暗 → 文字横向拉开 →
+   次要信息拉开），行程给足才不会挤在一起 */
+.case.is-ending-scrubbed .case-ending-spacer {
+  height: 170vh;
+}
+/* 右侧这块 composition 的比例直接照参考图量出来（按视口百分比）：
+     旧页面只在左边露出 ~24%
+     ending 区块       26.5% → 98.5%
+     Contact 那一列     26.5% → 69%
+     预览图那一列       70.9% → 98.5%（约占视口宽 27.6%）
+     上半 Next Up 区块  ~40% 高处，下半从 ~70% 高处开始
+   旧页面左移的距离（js 里的 SHIFT_VW）也是按同一套比例定的，
+   两边对得上才不会重叠 */
+.case-ending.is-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 73.5%; /* 左边缘落在 26.5% */
+  height: 100vh;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-top: none;
+  /* 右边留 1.5% 让内容收在 98.5%；底部 96px = 全站统一的收尾安全
+     留白（既躲开常驻 .site-footer，也和主内容的 padding-bottom
+     同一个数），所有 case 一致 */
+  padding: 0 1.5% 96px 0;
+  /* 淡入过半之前不接管鼠标事件，避免这层还看不见时就挡住下面 */
+  pointer-events: none;
+}
+/* 参考版式（Koto 式收尾）：NEXT UP + 大标题在最上面，视口 ~11% 高
+   处起排；下半块（rule/Contact | VIEW ALL/预览图）固定 34vh 高、
+   沉在底部安全留白之上。inner 只有 row 一个孩子，由 row 拉满 */
+.case-ending.is-overlay .case-ending-inner {
+  height: calc(88vh - 96px);
+}
+.case-ending.is-overlay.is-interactive {
+  pointer-events: auto;
+}
+/* 浮层状态下每个元素的默认值都必须是「看不见」：往回滚时 JS 会把
+   inline 样式清掉、让元素回到这里的 CSS 默认值——如果默认是可见的，
+   下一个项目就会在用户滚回正文时整块盖在内容上面。
+   文字类走「横向拉开」：clip-path 从右侧收满（完全看不见）到全开，
+   由 js/case.js 按各自的进度区间驱动，不是整体 fade */
+.case-ending.is-overlay .case-ending-reveal {
+  clip-path: inset(0 100% 0 0);
+}
+/* 预览图不走 clip，它是「从右下角以很小的尺寸出现、再逐渐长大」，
+   所以用 opacity + scale，并把缩放原点固定在右下角 */
+.case-ending.is-overlay .case-ending-preview-link {
+  opacity: 0;
+  transform: scale(0.42);
+  transform-origin: bottom right;
+}
+/* 上下两块之间那条细分隔线：单独成为一个元素，这样它也能跟着
+   一起被横向拉开，而不是一开始就整条画在那里 */
+/* 分隔线只压在左列上方，不横穿到预览图那一侧 */
+.case-ending-rule {
+  border-top: 1px solid #222220;
+  margin-bottom: 26px;
+}
+
+/* NEXT UP 标签和项目名错开：标签在左，项目名/描述往右缩进，
+   和下面 Contact / 预览图那一行形成同一套左右关系 */
+.case-ending-next {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+}
+/* 这一栏很窄，"NEXT UP" 不能被折成两行 */
+.case-ending-next > .case-kicker {
+  white-space: nowrap;
+}
+.case-ending-next-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1em;
+  color: inherit;
+  text-decoration: none;
+}
+/* 结尾这块的正文一律用同一个 15px，和整份 case study 里内容文字统一到
+   15px 是同一套原则——字号不负责制造层级，层级只靠 font-weight、颜色、
+   opacity 和留白。三个 mono 小标签（NEXT UP / GET IN TOUCH /
+   [ VIEW ALL PROJECTS ]）保持它们原本更小的 mono 字号不变 */
+.case-ending.is-overlay .case-ending-heading,
+.case-ending.is-overlay .case-ending-sub {
+  font-size: 15px;
+}
+/* 参考版式里 Next Up 的项目名是整块最大的字：标题白、tagline 同字号
+   灰，两行紧凑地叠在一起，成为收尾画面的视觉主角 */
+.case-ending.is-overlay .case-ending-next-title {
+  font-size: clamp(15px, 1.25vw, 21px);
+  font-weight: 500;
+  line-height: 1.35;
+  color: #f2f2f2;
+}
+.case-ending.is-overlay .case-ending-next-tagline {
+  margin-top: 0.15em;
+  /* 最小值放到 12px：一行展开后最长的 tagline（Chicken 5 Road 那句）
+     在 1280 宽正好排满到内容右边缘，窄窗口必须允许字继续跟着 vw 缩，
+     否则句尾会被视口裁掉 */
+  font-size: clamp(12px, 1.25vw, 21px);
+  font-weight: 500;
+  line-height: 1.35;
+  color: #8c8c86;
+  /* tagline 一行展开，不折行——上半块右侧本来就是空的（VIEW ALL
+     已经挪到预览图上方），长句可以越过左列边界横着排出去 */
+  white-space: nowrap;
+}
+.case-ending.is-overlay .case-ending-heading {
+  font-weight: 600;
+  line-height: 1.3;
+}
+.case-ending.is-overlay .case-ending-sub {
+  margin-top: 4px;
+  line-height: 1.5;
+  color: #8c8c86;
+}
+/* NEXT UP 在最左，项目名从区块宽度的 25% 处起排（对应参考图里标签和
+   标题明显错开的那段距离） */
+.case-ending.is-overlay .case-ending-next {
+  display: grid;
+  /* 原来是整块宽度的 25%；现在在 59% 的左列里，25/59 ≈ 42.4%，
+     标题的横向落点和原来一致 */
+  grid-template-columns: 42.4% 1fr;
+  /* 标题是大字，和小号 mono 标签按「顶边」对齐（参考图里 NEXT UP
+     和项目名首行顶对齐，不是 baseline 对齐） */
+  align-items: start;
+  gap: 0;
+}
+/* 下半两列：左 59%（分隔线 + Contact），右侧剩下的给
+   [ VIEW ALL PROJECTS ] + 预览图，中间留一条 gutter */
+.case-ending.is-overlay .case-ending-row {
+  display: grid;
+  grid-template-columns: 59% 1fr;
+  gap: 2.6%;
+  align-items: stretch;
+  height: 100%;
+  margin: 0;
+}
+/* 参考版式的两条水平线（所有 case 共用，不许各页单调）：
+     · 顶线：左列分隔线的顶边 = 右列预览图的顶边（下半块统一
+       --case-ending-lower 高度、双双沉底，所以顶边自然同线）；
+       [ VIEW ALL PROJECTS ] 贴在预览图正上方，压在这条线之上。
+     · 底线：GET IN TOUCH 底 = 预览图底 = 96px 安全留白之上
+       （Contact 内部 CTA 用 margin-top:auto 沉底）。 */
+.case-ending.is-overlay {
+  --case-ending-lower: 34vh;
+}
+.case-ending.is-overlay .case-ending-col-main {
+  display: flex;
+  flex-direction: column;
+}
+.case-ending.is-overlay .case-ending-col-main .case-ending-rule {
+  margin-top: auto;
+}
+.case-ending.is-overlay .case-ending-contact {
+  max-width: none;
+  /* 34vh 减去分隔线自己的 1px + 26px 下边距，让 rule 顶边正好
+     落在 --case-ending-lower 那条线上 */
+  height: calc(var(--case-ending-lower) - 27px);
+  display: flex;
+  flex-direction: column;
+}
+.case-ending.is-overlay .case-ending-cta {
+  margin-top: auto;
+  align-self: flex-start;
+}
+/* 预览图这一列：整列沉底，VIEW ALL 贴在图片正上方 */
+.case-ending.is-overlay .case-ending-preview {
+  flex: none;
+  max-width: none;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 14px;
+}
+/* 预览图完整显示、不裁剪：宽度撑满右列，高度按素材原始比例自适应
+   （之前锁 34vh + cover 会把 16:9 原图左右裁掉一大块）。整列 flex-end
+   沉底，所以图片底边仍然压在 96px 安全线上、VIEW ALL 仍贴在图片正
+   上方；左列 rule 顶那条 34vh 线只约束左列，不再强求图片顶边同线。
+   例外：chicken-5-road 的预览是画出来的摇杆场景（不是图片，没有
+   "被裁"的问题），在它自己的 case CSS 里单独保留固定高度的画框 */
+.case-ending.is-overlay .case-ending-preview-image {
+  aspect-ratio: auto;
+  height: auto;
+}
+.case-ending.is-overlay .case-ending-preview-image img,
+.case-ending.is-overlay .case-ending-preview-image video {
+  height: auto;
+}
+.case-ending-next-title {
+  font-size: clamp(15px, 1.1vw, 18px);
+  font-weight: 500;
+  transition: opacity 0.25s ease;
+}
+.case-ending-next-tagline {
+  font-size: clamp(13px, 0.95vw, 15px);
+  color: #8c8c86;
+}
+.case-ending-next-link:hover .case-ending-next-title {
+  opacity: 0.7;
+}
+
+/* 下方：左边 Contact CTA，右边一张小尺寸 Next Project 预览图，
+   两栏并排、底部对齐，大量留白留在两栏之间 */
+.case-ending-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 4vw;
+  flex-wrap: wrap;
+  margin-top: 64px;
+}
+.case-ending-contact {
+  max-width: 26em;
+}
+.case-ending-heading {
+  font-size: clamp(18px, 1.4vw, 24px);
+  font-weight: 500;
+}
+.case-ending-sub {
+  margin-top: 0.6em;
+  font-size: clamp(14px, 1vw, 16px);
+  color: #9a9a94;
+}
+/* “GET IN TOUCH ↗”——只显示这行文字，不再直接展示邮箱地址；
+   href 仍然是 mailto，点击行为不变 */
+.case-ending-cta {
+  display: inline-block;
+  margin-top: 1.2em;
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(12px, 0.9vw, 14px);
+  letter-spacing: 0.04em;
+  color: #f2f2f2;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.15em;
+}
+
+/* 预览图只占约 40% 宽度、保持完整比例（16:9，和 assets/work 里其它
+   case 的 hero 素材同一套比例），四周留大量黑色负空间，不再顶到
+   视口边缘、不再是压满视线的大图 */
+.case-ending-preview {
+  flex: 0 1 42%;
+  max-width: 45%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 20px;
+}
+.case-ending-preview-link {
+  display: block;
+  width: 100%;
+}
+.case-ending-preview-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #141414;
+}
+/* 这里的 .case-placeholder 要撑满这个小尺寸的比例框，不能用它
+   默认给全宽占位块用的 min-height（32vh 对这么窄的框来说太高了） */
+.case-ending-preview-image .case-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.case-ending-preview-image img,
+.case-ending-preview-image video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.case-ending-preview-link:hover .case-ending-preview-image img,
+.case-ending-preview-link:hover .case-ending-preview-image video {
+  transform: scale(1.03);
+}
+
+.case-view-all {
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(11px, 0.85vw, 14px);
+  letter-spacing: 0.06em;
+  color: #f2f2f2;
+  text-decoration: none;
+  opacity: 0.85;
+  transition: opacity 0.25s ease;
+  white-space: nowrap;
+}
+.case-view-all:hover {
+  opacity: 0.5;
+}
+
+/* ── 从 Work 页点进来时的 shared-element 进场过渡：首次绘制之前，
+   <head> 里的内联脚本就会给 <html> 打上 data-case-enter="1"，把页面
+   结构先藏起来，避免「先闪一眼完整版面、再开始动画」。
+   真正的时间轴在 js/case-enter.js，动画结束后这个属性会被移除、所有
+   inline style 也会清掉，页面完全回到原样。
+   注意这里只用 opacity 藏，不用 display/visibility——布局必须照常完成，
+   js/case-enter.js 才能量到 Hero 真实的 bounding box 当作动画终点 ── */
+html[data-case-enter="1"] .site-nav,
+html[data-case-enter="1"] .site-footer,
+html[data-case-enter="1"] .case-sidebar-inner,
+html[data-case-enter="1"] .case-content > *:not(#overview),
+html[data-case-enter="1"] #overview > *:not(#case-hero-media) {
+  opacity: 0;
+}
+/* Hero 本尊就是 morph 的主角（不再克隆一个 video）。
+   关键：这里就要用纯 CSS 把它摆到「Work 页那个小 box」上——首屏绘制
+   完全不依赖 JS。之前是等 case-enter.js 跑起来才设 transform，于是新
+   页面第一帧画出来的是 Hero 的最终大尺寸，下一帧才被拽回小图，看起来
+   就是「先闪一下大图、顿一下、才开始放大」。
+   现在第一帧画出来 Hero 就正好压在 Work 页 Hero 原来的位置上，和上一页
+   无缝接住，JS 只负责把它动画回自己的自然位置 */
+html[data-case-enter="1"] #case-hero-media {
+  position: fixed;
+  left: var(--enter-x);
+  top: var(--enter-y);
+  width: var(--enter-w);
+  height: var(--enter-h);
+  margin: 0;
+  z-index: 80;
+  will-change: transform;
+}
+
+/* 进场这一秒里，首屏之外的 section 先不参与渲染。
+   这一条同时解决两件事：
+     · content-visibility 跳过它们的布局/绘制/解码，主线程腾出来给 morph；
+     · contain-intrinsic-size 先替它们占住高度——否则图片还没加载时整个
+       文档是「塌」的，所有图片都落在视口附近，img 的 loading="lazy"
+       会全部失效，于是 Campaign 那两张 4.3MB / 2.4MB 的大图会在点开的
+       同一瞬间开始下载并解码，正好卡住进场动画的头几帧。
+   过渡结束后 data-case-enter 被移除，这里全部失效，页面恢复正常渲染 */
+html[data-case-enter="1"] .case-content > .case-section:not(#overview) {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 900px;
+}
+
+/* ── View Transition 定制：过渡时长/缓动，克制、干净，不夸张。
+   duolingo-hero 是缩略图 morph 成大 Hero 那个具名过渡；root 是
+   页面其余没命名内容的默认整体 crossfade（标题/简介/标签/其它
+   卡片都在这里面，天然满足"逐渐 fade out"）──
+   注意：这些伪元素只有支持 View Transitions 的浏览器才会用到，
+   不支持的浏览器会整段忽略，直接正常跳转 ── */
+::view-transition-group(duolingo-hero) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.4s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (max-width: 900px) {
+  .case-layout {
+    flex-direction: column;
+    padding-top: 10vh;
+    gap: 6vh;
+  }
+  .case-sidebar {
+    position: relative;
+    top: auto;
+    height: auto;
+    flex: none;
+  }
+  .case-module-two-col {
+    grid-template-columns: 1fr;
+  }
+  .case-module-prototype {
+    max-width: 100%;
+  }
+  .case-ending-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .case-ending-preview {
+    max-width: 100%;
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .case-toc a,
+  .case-ending-next-title,
+  .case-ending-preview-image img,
+  .case-ending-preview-image video {
+    transition: none;
+  }
+  ::view-transition-group(duolingo-hero),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,246 @@
+/* ══════════════════════════════════════════════════
+   Hero 内容层：娃娃机装配 + 文字排版
+   （坐标按 1920×1080 定位稿换算成百分比）
+   ══════════════════════════════════════════════════ */
+
+:root {
+  --font-sans: "Geist", "Helvetica Neue", -apple-system, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, monospace;
+  --text: #f2f2f2;
+  --pad-x: 4.2%;
+}
+
+/* ── 漂浮贴纸层：视口固定，横跨 Hero 与 About 的同一个空间 ── */
+.hero-float {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.hero-float-back  { z-index: 0; } /* 光背景之上、machine(1) 之下；About 透明，全程可见 */
+.hero-float-front { z-index: 3; } /* 文字(2) 和机器之上，空间最前层 */
+/* 运动由 js/hero-float.js 驱动（首批顺序登场 + 每轮随机重生位置）
+   这里只负责定位与尺寸 */
+.hero-float .fl {
+  position: absolute;
+  left: var(--x);
+  top: -20%;
+  will-change: transform;
+}
+.hero-float .fl .sw {
+  display: block;
+}
+.hero-float .fl img {
+  display: block;
+  width: calc(var(--size) * var(--sizeScale, 1));
+  min-width: 42px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-float { display: none; }
+}
+
+/* ── 过渡材质（仅滚动过渡区间挂载，静止时不存在）──
+   统一视觉语言：先浮现极轻的 Halftone（存在感 10~15%，只是材质），
+   随后边缘逐渐溶解自然消失；--dotR 由 js/hero-about.js 驱动 ── */
+/* 统一 Dissolve 场：与背景层同一网格（7px）、同一相位——
+   遮罩挂在 .machine-rig 本体上（不是外层 .hero-machine wrapper）：
+   wrapper 的盒子只有 100vh（等于 Hero），而 rig 内容实际有 112vh
+   （上下各出血一截），若把遮罩挂在 wrapper 上会把超出 wrapper
+   盒子的部分直接裁掉——这就是之前"先被裁切、又突然完整重现"的
+   根因。遮罩必须挂在内容自身真正的包围盒（rig）上，才能覆盖它
+   的全部像素，不产生裁切边界。 */
+.machine-rig.dissolving,
+.hero-float.dissolving {
+  --dotR: 5.2px;
+  -webkit-mask-image: radial-gradient(circle, #000 var(--dotR), transparent calc(var(--dotR) + 0.6px));
+  -webkit-mask-size: 7px 7px;
+  mask-image: radial-gradient(circle, #000 var(--dotR), transparent calc(var(--dotR) + 0.6px));
+  mask-size: 7px 7px;
+}
+.machine-rig {
+  /* 收缩原点 = Hero 视口垂直中心，换算到 rig 自身坐标系
+     （rig top=-3.5vh, height=112vh → (50-(-3.5))/112 ≈ 47.8%）
+     所有边缘朝同一个屏幕固定点单调收拢，不会出现忽隐忽现 */
+  transform-origin: 50% 47.8%;
+}
+
+/* ── 娃娃机装配：机身坐标系 697×1180 ── */
+.machine-rig {
+  position: absolute;
+  left: 50%;
+  top: -3.5vh;
+  top: -3.5svh;
+  height: 112vh;
+  height: 112svh;
+  aspect-ratio: 697 / 1180;
+  transform: translateX(-50%);
+}
+.machine-rig img {
+  position: absolute;
+  display: block;
+}
+.machine-rig img[hidden] {
+  display: none;
+}
+.machine-rig .machine-body {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* 机檐盖板：同一张机身 SVG，只显示檐口区域（y 0~134.66 → 11.41%），
+   与机身像素级对齐，用来遮住抓夹伸缩杆的顶部 */
+.machine-rig .machine-canopy {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  clip-path: inset(0 0 88.59% 0);
+}
+
+/* 抓夹组：吊杆 + 夹爪状态件（机檐会遮住顶部）
+   组坐标系 202×295；吊杆轴心在爪体 x=53.8（26.6%）。
+   静止第一帧 openclaw 挂在爪体正下方（y=239，不与爪体重叠） */
+/* 抓夹组：组坐标系 108×422（新爪体 108×360 + 爪指 63）
+   静止时圆柱块顶(组内 y=223.6)微微探入机檐后（机檐下沿 y=134.66）
+   → 组 top = (128.6 - 223.6)/1180 = -8.05%，伸缩杆全部藏在机檐后/画面外
+   下降时杆顶不动，杆身自然露出（余量 223px，最大下降 ~19%） */
+.claw-group {
+  position: absolute;
+  left: 42.16%;
+  top: -8.05%;
+  width: 15.49%;
+  height: 35.76%;
+}
+.claw-group .claw-body {
+  left: 0;
+  top: 0;
+  width: 100%;
+}
+/* ── 玻璃罩里的产品（位置按参考图，机身玻璃框会遮住贴边部分） ── */
+.machine-products {
+  position: absolute;
+  inset: 0;
+}
+.machine-products img {
+  position: absolute;
+  height: auto;
+}
+/* 位置按参考图内容边界换算（宽度已补偿各 PNG 的透明边距；
+   角度已烘焙在导出图里，不再用 CSS 旋转） */
+.p-app-left  { left: 10.21%; bottom: 44.5%; width: 12.47%; }
+.p-star      { left: 26.88%; bottom: 47.42%; width: 13.56%; }
+.p-metal     { left: 66.35%; bottom: 45.01%; width: 16.73%; }
+.p-lego      { left: 15.47%; bottom: 43.49%; width: 19.02%; }
+.p-glowyin   { left: 39.08%; bottom: 45.92%; width: 15.19%; }
+.p-burger    { left: 42.61%; bottom: 41.97%; width: 38.12%; }
+.p-thinking  { left: 29.14%; bottom: 44.5%; width: 19.61%; }
+.p-graphic   { left: 66.99%; bottom: 44.93%; width: 17.68%; }
+.p-app-right { left: 72.6%; bottom: 44.69%; width: 17.98%; }
+
+/* 左右爪指：挂在铰链板正下方（组内 y=359），
+   悬臂、铰链圆、爪指全部可见（按设计稿装配） */
+.claw-group .claw-state {
+  top: 85.07%;
+  width: 32.41%;
+}
+/* 右爪在产品堆里永远处于最前：夹任何产品都是
+   "左爪在后 → 产品居中 → 右爪在前"的三明治结构 */
+.claw-group-front {
+  z-index: 5;
+}
+.claw-group .claw-l { left: 1.65%; }
+.claw-group .claw-r { left: 66.46%; }
+
+/* 摇杆：装在控制面板的安装板上（参考图位置）
+   摆动与鼠标跟随由 js/hero-machine.js 驱动 */
+.machine-rig .joystick-stick {
+  left: 45.98%;
+  top: 54.2%;
+  width: 8.03%;
+  transform-origin: 50% 90%;
+}
+.machine-rig .joystick-base {
+  left: 44.55%;
+  top: 63.1%;
+  width: 10.9%;
+}
+
+/* 待机呼吸 / 鼠标跟随 / 抓取动画统一由 js/hero-machine.js 驱动
+   （prefers-reduced-motion 时脚本不启动，保持静态） */
+
+/* ── 文字层 ── */
+.hero-content {
+  pointer-events: none;
+  color: var(--text);
+}
+.hero-content a {
+  pointer-events: auto;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 顶栏导航已抽为全局固定层，见 css/site-chrome.css 的 .site-nav */
+
+/* 右上：自我介绍 */
+.hero-intro {
+  position: absolute;
+  top: 20%;
+  right: var(--pad-x);
+  text-align: right;
+  font-family: var(--font-sans);
+  font-size: clamp(14px, 1.3vw, 27px);
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+/* 左侧大标题：屏幕纵向居中 */
+.hero-headline {
+  position: absolute;
+  left: var(--pad-x);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85em;
+  font-family: var(--font-sans);
+  font-size: clamp(28px, 3.25vw, 68px);
+  font-weight: 500;
+  line-height: 1.32;
+  letter-spacing: 0.005em;
+}
+
+/* 左下：操作步骤 */
+.hero-steps {
+  position: absolute;
+  left: var(--pad-x);
+  bottom: 6.5%;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: clamp(12px, 1vw, 21px);
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+}
+
+/* 右中：领域标签 */
+.hero-tags {
+  position: absolute;
+  right: var(--pad-x);
+  top: 62%;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: clamp(12px, 1vw, 21px);
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+}
+
+/* 右下：所在地 */
+.hero-location {
+  position: absolute;
+  right: var(--pad-x);
+  bottom: 6.5%;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: clamp(12px, 1vw, 21px);
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+}

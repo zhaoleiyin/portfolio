@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Duolingo — Zhaolei Yin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <!-- hero-bg.css 里只用它开头那段全站基础 reset(*{margin:0;padding:0;
+       box-sizing:border-box} + html/body 基底黑)——这份 reset 目前就放在
+       这个文件里，其余 .layer-ambient/.hero-bg 相关规则在没有对应
+       DOM 的这个页面上不会命中任何元素，纯粹是死规则，不影响视觉 -->
+  <link rel="stylesheet" href="../css/hero-bg.css" />
+  <link rel="stylesheet" href="../css/site-chrome.css" />
+  <link rel="stylesheet" href="../css/work.css" />
+  <link rel="stylesheet" href="../css/case.css" />
+  <!-- 只服务这一个 case 的样式（比如 Research section 用的
+       Duolingo 项目自己的 Color Palette）——不进 case.css，
+       避免把某一个项目的品牌色变成所有 case 共用模板的一部分 -->
+  <link rel="stylesheet" href="../css/case-duolingo.css" />
+
+  <!-- 进场动画在 body 末尾的脚本里起跑，但这些脚本要等解析到那里才开始
+       下载——那段等待就是「点开之后先顿一下」。这里提前发起请求，让它们
+       和文档解析并行下载，morph 能早几十毫秒开跑 -->
+  <link rel="preload" as="script" href="../vendor/gsap/gsap.min.js" />
+  <link rel="preload" as="script" href="../js/case-enter.js" />
+
+  <!-- 进场过渡的交接点，必须在首次绘制之前同步跑完：把 Work 页存下来的
+       起始 box 写成 CSS 变量、给 <html> 打上 data-case-enter="1"，
+       css/case.css 里对应的规则会先把页面结构藏起来，避免「先闪一眼
+       完整版面、再开始动画」。真正的时间轴在 js/case-enter.js。
+       任何一步不满足（直接打开本页、隔太久、窄屏、reduced-motion）就
+       什么都不做，页面按最普通的方式显示 -->
+  <script>
+    (function () {
+      try {
+        // 从 Work 页跳进来必须落在页面顶部，不保留旧的滚动位置
+        if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+        var raw = sessionStorage.getItem("case-enter");
+        if (!raw) return;
+        sessionStorage.removeItem("case-enter"); // 一次性，刷新后不再重放
+        var d = JSON.parse(raw);
+        if (!d || d.slug !== "duolingo") return;
+        if (Date.now() - d.t > 4000) return;
+        if (!d.w || !d.h) return;
+        if (window.innerWidth < 900) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        var r = document.documentElement;
+        r.style.setProperty("--enter-x", d.x + "px");
+        r.style.setProperty("--enter-y", d.y + "px");
+        r.style.setProperty("--enter-w", d.w + "px");
+        r.style.setProperty("--enter-h", d.h + "px");
+        r.dataset.caseEnterTime = d.ct || 0;
+        // 交接帧截图（dataURL 很长，放内存全局变量，不塞进 DOM 属性）
+        window.__caseEnterPoster = d.poster || "";
+        r.dataset.caseEnter = "1";
+      } catch (e) {
+        /* sessionStorage 不可用等情况：忽略，正常显示页面 */
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- 全局固定顶栏/底栏：和 index.html 完全同一份标记，只是链接
+       改成带 ../index.html 前缀跳回主页面对应位置 -->
+  <header class="site-nav" id="site-nav">
+    <a class="site-nav-logo" href="../index.html#hero">ZHAOLEI YIN</a>
+    <nav class="site-nav-links">
+      <a href="../index.html#work">Work</a>
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#outro">Contact</a>
+    </nav>
+  </header>
+  <!-- 全局固定底栏：和 index.html 完全同一份标记/内容，不单独
+       设计——全站所有页面的这个 footer 都必须保持一致 -->
+  <footer class="site-footer" id="site-footer">
+    <span>&copy; 2026 ZHAOLEI YIN</span>
+    <a class="site-footer-mid" href="https://www.linkedin.com/in/zhaolei-yin/" target="_blank" rel="noopener">LINKEDIN</a>
+    <a href="mailto:yinzhaolei1113@gmail.com">YINZHAOLEI1113@GMAIL.COM</a>
+  </footer>
+
+  <!-- Case Detail Page 通用模板（css/case.css + js/case.js）：
+       左侧 sticky 信息栏 + 右侧 editorial storytelling 内容。
+       Research/Approach/Design 三个 section 目前只有占位块——
+       assets/work/duolingo/ 还没有对应素材，等补图后直接替换
+       .case-placeholder 就行，不用改结构。 -->
+  <main class="case">
+    <!-- .case-page-canvas 把 sidebar + content 包成一个整体，结尾退场时
+         作为一个 unified canvas 一起向左移动。
+         这里刻意不使用 ScrollTrigger 的 pin：pin 会在被 pin 的元素上留下
+         transform（哪怕是 matrix(1,0,0,1,0,0) 这种恒等值），而带 transform
+         的祖先会成为 position:fixed 后代的 containing block，把里面
+         Experience 那段 sticky video 的 pin 定位彻底算错。
+         改用原生 position:sticky + bottom:0（见 css/case.css）：它天然就是
+         「内容全部滚完之后，最后一屏停在视口里不动」，不写任何 transform，
+         对内部的 pin 完全无副作用 -->
+    <div class="case-page-canvas" id="case-page-canvas">
+    <div class="case-layout">
+      <aside class="case-sidebar">
+        <!-- 左侧只负责项目识别（名字/一句 tagline/类别·年份/目录），
+             不再承担项目介绍——参考 Koto case study 的信息层级：
+             左侧极简，右侧 Hero 才是主视觉，说明文字挪到 Hero 下方
+             （见下面 #overview 里的 .case-overview） -->
+        <div class="case-sidebar-inner">
+          <h1 class="case-title case-title-accent">Duolingo</h1>
+          <p class="case-tagline">Because it&rsquo;s easy.</p>
+          <p class="case-meta">Integrated Campaign · UX/UI — 2023</p>
+          <nav class="case-toc">
+            <a href="#overview">Overview</a>
+            <a href="#research">Research</a>
+            <a href="#persona">Persona</a>
+            <a href="#ideation">Ideation</a>
+            <a href="#visual-system">Visual System</a>
+            <a href="#experience">Experience</a>
+            <a href="#final-design">Final Design</a>
+            <a href="#campaign">Campaign</a>
+          </nav>
+        </div>
+      </aside>
+
+      <div class="case-content">
+        <!-- 01 Overview：从 Work 页点进来的 shared-element 落点，
+             view-transition-name 要和 css/work.css 里
+             #work-media-duolingo 用同一个名字，这是真实素材（唯一
+             一个不是占位框的媒体位），不能换成占位框，否则会破坏
+             跳转过来的过渡效果 -->
+        <!-- 这里不放 "Overview" 标签——它是 Overview 这个 section
+             唯一在最顶上的元素，加了标签会把 Hero 往下推、跟左侧
+             侧栏标题区顶部对不齐；侧栏 TOC 已经能看出当前在
+             Overview，这个视觉入口本身也足够清楚 -->
+        <section class="case-section" id="overview">
+          <div class="case-module case-module-hero" id="case-hero-media">
+            <video src="../assets/work/duolingo/hero.mp4" autoplay muted loop playsinline></video>
+          </div>
+          <!-- 项目介绍从左侧侧栏搬过来，不再横跨整栏宽度——收成
+               Hero 右下方一小块，右侧留住黑色负空间，让 Hero 本身
+               继续是这个 section 唯一的视觉重心。文字内容和原来
+               侧栏那句 description 完全一样，只是挪了位置。不再重复
+               加 "Overview" 标签——侧栏导航已经能看出当前在哪个
+               section，这里不需要再说一遍 -->
+          <div class="case-overview">
+            <p class="case-caption">
+              A game built to get beginners past the first awkward words,
+              together.
+            </p>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- 02 Research & Discovery -->
+        <section class="case-section" id="research">
+          <p class="case-kicker">Research</p>
+          <div class="case-module case-module-typography">
+            <p class="case-pull-quote">
+              <span class="case-pull-quote-a">&ldquo;The biggest barrier isn&rsquo;t always knowing the
+              words.</span>
+              <span class="case-pull-quote-b">Sometimes it&rsquo;s having the confidence to use
+              them.&rdquo;</span>
+            </p>
+          </div>
+          <p class="case-caption case-research-intro">
+            I looked at what makes beginners hesitate to speak and what
+            gets in the way of their confidence.
+          </p>
+
+          <p class="case-kicker case-kicker-faint">Key Findings</p>
+          <!-- 5 张真实 Research visual，object-fit: contain 已经在
+               css/case-duolingo.css 里写好，图片按各自原始宽高比
+               展示，不裁切、不拉伸 -->
+          <!-- 5 张插画从两排堆叠改成一条横向 media strip：桌面端一次
+               看到 3 张，04/05 只能靠两侧小箭头手动切换（见
+               case-duolingo.js）——不响应滚轮/trackpad/拖拽/页面滚动，
+               避免用户正常纵向滚动页面时插画被意外带着切换 -->
+          <div class="case-module case-findings">
+            <div class="case-findings-wrap">
+              <button type="button" class="case-findings-arrow case-findings-arrow-prev" id="findings-prev" aria-label="Show previous findings" style="--arrow-accent: #ffc800;">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 6l-6 6 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <button type="button" class="case-findings-arrow case-findings-arrow-next" id="findings-next" aria-label="Show next findings" style="--arrow-accent: #1cb0f6;">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 6l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <div class="case-findings-strip" id="findings-strip">
+              <div class="case-findings-track" id="findings-track">
+              <figure class="case-finding" style="--finding-accent: #ce82ff;">
+                <div class="case-finding-media">
+                  <img src="../assets/work/duolingo/research-01.jpg" alt="Communication" draggable="false" loading="lazy" decoding="async" />
+                </div>
+                <figcaption>
+                  <p class="case-finding-title">Communication</p>
+                  <p class="case-finding-desc">Learners want everyday conversation, not vocabulary drills.</p>
+                </figcaption>
+              </figure>
+              <figure class="case-finding" style="--finding-accent: #1cb0f6;">
+                <div class="case-finding-media">
+                  <img src="../assets/work/duolingo/research-02.jpg" alt="Intimidation" draggable="false" loading="lazy" decoding="async" />
+                </div>
+                <figcaption>
+                  <p class="case-finding-title">Intimidation</p>
+                  <p class="case-finding-desc">The fear of getting it wrong is what stops the first sentence.</p>
+                </figcaption>
+              </figure>
+              <figure class="case-finding" style="--finding-accent: #58cc02;">
+                <div class="case-finding-media">
+                  <img src="../assets/work/duolingo/research-03.jpg" alt="Isolation" draggable="false" loading="lazy" decoding="async" />
+                </div>
+                <figcaption>
+                  <p class="case-finding-title">Isolation</p>
+                  <p class="case-finding-desc">Studying alone makes the distance feel bigger.</p>
+                </figcaption>
+              </figure>
+              <figure class="case-finding" style="--finding-accent: #f39829;">
+                <div class="case-finding-media">
+                  <img src="../assets/work/duolingo/research-04.jpg" alt="Simplicity" draggable="false" loading="lazy" decoding="async" />
+                </div>
+                <figcaption>
+                  <p class="case-finding-title">Simplicity</p>
+                  <p class="case-finding-desc">Pointing at something beats spelling it out.</p>
+                </figcaption>
+              </figure>
+              <figure class="case-finding" style="--finding-accent: #ffc800;">
+                <div class="case-finding-media">
+                  <img src="../assets/work/duolingo/research-05.jpg" alt="Engagement" draggable="false" loading="lazy" decoding="async" />
+                </div>
+                <figcaption>
+                  <p class="case-finding-title">Engagement</p>
+                  <p class="case-finding-desc">If it plays like a game, people come back to it.</p>
+                </figcaption>
+              </figure>
+              </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- 03 Persona：参考用户提供的 persona 参考图的排版结构——
+             左侧文字列（kicker + 大标题 + 介绍段落 + Goals/Needs/
+             Pain Points 三栏)，右侧人像 + 装饰图形，底部通栏
+             Motivation highlight。只参考图片的排版/信息层级，不搬
+             它的视觉设计——图形颜色全部用本页已经在用的 Duolingo
+             Project Color Palette，不是参考图里的颜色，也不是
+             Duolingo 官方色。所有文字原封不动，只重排 layout ──
+             人像图片文件由用户放进 assets/work/duolingo/，在此之前
+             用 .case-placeholder 占位 -->
+        <section class="case-section" id="persona">
+          <div class="case-module case-persona">
+            <div class="case-persona-text">
+              <p class="case-kicker">Persona</p>
+              <p class="case-pull-quote case-persona-heading">Meet Akemi<span class="case-persona-heading-dot" style="--accent: #58cc02;">.</span></p>
+              <p class="case-caption case-persona-intro">
+                Akemi is a Japanese exchange student at UCLA studying game
+                design. She wants to make friends and improve her English,
+                but limited confidence and fear of making mistakes often
+                keep her from joining conversations.
+              </p>
+
+              <div class="case-persona-cards">
+                <div class="case-persona-card" style="--accent: #58cc02;">
+                  <svg class="case-persona-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.5" cy="9" r="2.4"/><path d="M15.8 13.2c2.6.4 4.7 2.6 4.7 5.3"/></svg>
+                  <span class="case-persona-card-label">Goals</span>
+                  <p class="case-persona-card-text">Make friends and build confidence speaking English.</p>
+                </div>
+                <div class="case-persona-card" style="--accent: #1cb0f6;">
+                  <svg class="case-persona-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 5.5h16v10H9.5L5 19v-3.5H4z"/><circle cx="9" cy="10.3" r="0.9" fill="currentColor" stroke="none"/><circle cx="12" cy="10.3" r="0.9" fill="currentColor" stroke="none"/><circle cx="15" cy="10.3" r="0.9" fill="currentColor" stroke="none"/></svg>
+                  <span class="case-persona-card-label">Needs</span>
+                  <p class="case-persona-card-text">A fun, encouraging way to practice without fear of mistakes.</p>
+                </div>
+                <div class="case-persona-card" style="--accent: #ce82ff;">
+                  <svg class="case-persona-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 7.5 3c0 5.4-7.5 10-7.5 10z"/></svg>
+                  <span class="case-persona-card-label">Pain Points</span>
+                  <p class="case-persona-card-text">Feels nervous speaking English and struggles to join conversations.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 人物是唯一的视觉主体，其它图形只是她身后/身边的
+                 framing——DOM 顺序 = 层叠顺序（越靠后越靠上）：
+                 橙色胶囊 → 绿色大圆（压住胶囊）→ 紫色弧线/蓝色拱门/
+                 红色形状/蓝色圆环（贴着人物轮廓摆）→ 人物本身（压住
+                 前面所有图形）→ 一颗小 sparkle（叠在人物/笔记本上，
+                 像一个贴纸）。所有图形都收在人物所在的这个框内，
+                 没有一个孤零零飘在远处 -->
+            <div class="case-persona-visual">
+              <div class="case-persona-shape case-persona-shape-pill" aria-hidden="true"></div>
+              <div class="case-persona-shape case-persona-shape-circle" aria-hidden="true"></div>
+              <div class="case-persona-shape case-persona-shape-arc" aria-hidden="true"></div>
+              <div class="case-persona-shape case-persona-shape-arch" aria-hidden="true"></div>
+              <div class="case-persona-shape case-persona-shape-half" aria-hidden="true"></div>
+              <div class="case-persona-shape case-persona-shape-ring" aria-hidden="true"></div>
+              <img src="../assets/work/duolingo/人物.png" alt="Akemi persona illustration" loading="lazy" decoding="async" />
+              <svg class="case-persona-sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c0 5-1 6-6 6 5 0 6 1 6 6 0-5 1-6 6-6-5 0-6-1-6-6z"/></svg>
+            </div>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- 04 Ideation：不再是三个阶段纵向堆叠的文档，改成一个
+             横向 slider——01 Explore/Brainstorm → 02 Structure/
+             User Flow → 03 Shape/Early Wireframes 共享同一块展示
+             区域，用左右箭头切换（横向 slide 过渡，逻辑在
+             case-duolingo.js）。Brainstorm 和 User Flow 依然是纯
+             HTML/SVG 手绘的图，Wireframes 依然是用户提供的 4 张真实
+             素材——这次只重排它们的容器/交互，SVG 坐标和图片本身
+             一个像素都没有改。01/02/03 的强调色沿用 Simple/Social/
+             Playful 那套绿/蓝/紫，和其它 section 是同一个 Duolingo
+             Project Color Palette -->
+        <section class="case-section" id="ideation">
+          <!-- 标题只是 section introduction，不再抢视觉——字号缩小到
+               约 70%，Simple/Social/Playful 也删掉（Brainstorm 图里
+               已经画出来了，不重复说一遍）。导航从"箭头切换"改成
+               "点 01/02/03 直接跳转"，逻辑在 case-duolingo.js -->
+          <div class="case-ideation-header">
+            <p class="case-kicker">Ideation</p>
+            <p class="case-ideation-headline">What if practice felt more like interaction than studying?</p>
+          </div>
+
+          <div class="case-module case-ideation-slider" id="ideation-slider">
+            <div class="case-ideation-viewport">
+              <div class="case-ideation-track" id="ideation-track">
+
+                <!-- 01 Explore：手绘 mind map，中心 Duolingo，三个方向
+                     Audience/Interaction/Experience，细线连接，
+                     Simple/Social/Playful 三个叶子节点用绿/蓝/紫强调，
+                     其余文字和线条都是白/灰 -->
+                <div class="case-ideation-slide" style="--accent: #58cc02;">
+                  <p class="case-ideation-label">Brainstorm</p>
+                  <div class="case-ideation-slide-media">
+                    <svg class="case-ideation-diagram case-ideation-mindmap" viewBox="0 0 960 340" role="img" aria-label="Brainstorm mind map radiating from Duolingo into Audience, Interaction, and Experience">
+                      <g class="cim-lines" stroke="#3a3a38" stroke-width="1.1" fill="none">
+                        <path d="M480 160 L260 70" />
+                        <path d="M480 160 L700 70" />
+                        <path d="M480 160 L480 280" />
+                        <path d="M260 70 L100 28" />
+                        <path d="M260 70 L165 82" />
+                        <path d="M260 70 L150 128" />
+                        <path d="M700 70 L840 22" />
+                        <path d="M700 70 L862 62" />
+                        <path d="M700 70 L862 102" />
+                        <path d="M700 70 L836 142" />
+                        <path d="M480 280 L370 308" />
+                        <path d="M480 280 L480 316" />
+                        <path d="M480 280 L590 308" />
+                      </g>
+                      <g class="cim-nodes" fill="#6a6a64">
+                        <circle cx="480" cy="160" r="4" />
+                        <circle cx="260" cy="70" r="3" />
+                        <circle cx="700" cy="70" r="3" />
+                        <circle cx="480" cy="280" r="3" />
+                        <circle cx="100" cy="28" r="2.4" />
+                        <circle cx="165" cy="82" r="2.4" />
+                        <circle cx="150" cy="128" r="2.4" />
+                        <circle cx="840" cy="22" r="2.4" />
+                        <circle cx="862" cy="62" r="2.4" />
+                        <circle cx="862" cy="102" r="2.4" />
+                        <circle cx="836" cy="142" r="2.4" />
+                        <circle cx="370" cy="308" r="2.4" />
+                        <circle cx="480" cy="316" r="2.4" />
+                        <circle cx="590" cy="308" r="2.4" />
+                      </g>
+                      <text x="480" y="150" text-anchor="middle" fill="#58cc02" font-family="Geist, sans-serif" font-size="24" font-weight="700">Duolingo</text>
+                      <text x="260" y="52" text-anchor="middle" fill="#f2f2f2" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="700" letter-spacing="0.04em">AUDIENCE</text>
+                      <text x="700" y="52" text-anchor="middle" fill="#f2f2f2" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="700" letter-spacing="0.04em">INTERACTION</text>
+                      <text x="480" y="272" text-anchor="middle" fill="#f2f2f2" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="700" letter-spacing="0.04em">EXPERIENCE</text>
+                      <text x="90" y="22" text-anchor="end" fill="#c8c8c2" font-family="Geist, sans-serif" font-size="14">Students</text>
+                      <text x="155" y="86" text-anchor="end" fill="#c8c8c2" font-family="Geist, sans-serif" font-size="14">Int'l Students</text>
+                      <text x="140" y="122" text-anchor="end" fill="#c8c8c2" font-family="Geist, sans-serif" font-size="14">Travellers</text>
+                      <text x="850" y="16" text-anchor="start" fill="#c8c8c2" font-family="Geist, sans-serif" font-size="14">Practice</text>
+                      <text x="872" y="56" text-anchor="start" fill="#c8c8c2" font-family="Geist, sans-serif" font-size="14">Speak</text>
+                      <text x="872" y="96" text-anchor="start" fill="#c8c8c2" font-family="Geist, sans-serif" font-size="14">Connect</text>
+                      <text x="846" y="136" text-anchor="start" fill="#c8c8c2" font-family="Geist, sans-serif" font-size="14">Share</text>
+                      <text x="370" y="330" text-anchor="middle" fill="#58cc02" font-family="Geist, sans-serif" font-size="14" font-weight="600">Simple</text>
+                      <text x="480" y="330" text-anchor="middle" fill="#1cb0f6" font-family="Geist, sans-serif" font-size="14" font-weight="600">Social</text>
+                      <text x="590" y="330" text-anchor="middle" fill="#ce82ff" font-family="Geist, sans-serif" font-size="14" font-weight="600">Playful</text>
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- 02 Structure：手绘 User Flow，横向单条主干（Welcome→
+                     Choose Language→Practice→Connect→Achievement），
+                     Practice 下面分两个 branch（Conversation/Expressions）
+                     再汇合进 Connect。起点/终点用 Duolingo green 填充，
+                     其余节点深底+浅灰描边 -->
+                <div class="case-ideation-slide" style="--accent: #1cb0f6;">
+                  <p class="case-ideation-label">User Flow</p>
+                  <div class="case-ideation-slide-media">
+                    <svg class="case-ideation-diagram case-ideation-flow" viewBox="0 0 1000 220" role="img" aria-label="User flow from Welcome through Choose Language, Practice, Conversation and Expressions, Connect, to Achievement">
+                      <defs>
+                        <marker id="cif-arrow" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                          <path d="M0 0 L8 4 L0 8 Z" fill="#4a4a46" />
+                        </marker>
+                      </defs>
+                      <g class="cif-lines" stroke="#4a4a46" stroke-width="1.2" fill="none" marker-end="url(#cif-arrow)">
+                        <path d="M130 110 L166 110" />
+                        <path d="M330 110 L366 110" />
+                        <path d="M480 104 L536 44" />
+                        <path d="M480 116 L536 176" />
+                        <path d="M690 44 L736 100" />
+                        <path d="M680 176 L736 120" />
+                        <path d="M850 110 L886 110" />
+                      </g>
+                      <g class="cif-nodes" font-family="IBM Plex Mono, monospace" font-size="12.5" font-weight="500" letter-spacing="0.03em" text-anchor="middle">
+                        <g>
+                          <rect x="20" y="88" width="110" height="44" rx="22" fill="#58cc02" />
+                          <text x="75" y="115" fill="#0a0a0a">Welcome</text>
+                        </g>
+                        <g>
+                          <rect x="170" y="88" width="160" height="44" rx="22" fill="#141414" stroke="#4a4a46" />
+                          <text x="250" y="115" fill="#f2f2f2">Choose language</text>
+                        </g>
+                        <g>
+                          <rect x="370" y="88" width="110" height="44" rx="22" fill="#141414" stroke="#4a4a46" />
+                          <text x="425" y="115" fill="#f2f2f2">Practice</text>
+                        </g>
+                        <g>
+                          <rect x="536" y="20" width="154" height="38" rx="19" fill="#141414" stroke="#4a4a46" />
+                          <text x="613" y="44" fill="#f2f2f2">Conversation</text>
+                        </g>
+                        <g>
+                          <rect x="536" y="158" width="144" height="38" rx="19" fill="#141414" stroke="#4a4a46" />
+                          <text x="608" y="182" fill="#f2f2f2">Expressions</text>
+                        </g>
+                        <g>
+                          <rect x="740" y="88" width="110" height="44" rx="22" fill="#141414" stroke="#4a4a46" />
+                          <text x="795" y="115" fill="#f2f2f2">Connect</text>
+                        </g>
+                        <g>
+                          <rect x="880" y="88" width="112" height="44" rx="22" fill="#58cc02" />
+                          <text x="936" y="115" fill="#0a0a0a" font-size="11.5">Achievement</text>
+                        </g>
+                      </g>
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- 03 Shape：真实 wireframe 素材，4 张原样并排展示，不
+                     裁切、不修改内容，只统一了展示高度 -->
+                <div class="case-ideation-slide" style="--accent: #ce82ff;">
+                  <p class="case-ideation-label">Early Wireframes</p>
+                  <div class="case-ideation-slide-media case-ideation-wireframes">
+                    <img src="../assets/work/duolingo/wireframe1.png" alt="Early wireframe 1" loading="lazy" decoding="async" />
+                    <img src="../assets/work/duolingo/wireframe2.png" alt="Early wireframe 2" loading="lazy" decoding="async" />
+                    <img src="../assets/work/duolingo/wireframe3.png" alt="Early wireframe 3" loading="lazy" decoding="async" />
+                    <img src="../assets/work/duolingo/wireframe4.png" alt="Early wireframe 4" loading="lazy" decoding="async" />
+                  </div>
+                  <p class="case-caption case-ideation-wireframes-caption">
+                    Turning the flow into something two people can play.
+                  </p>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="case-ideation-pager" id="ideation-pager">
+            <button type="button" class="case-ideation-pager-item is-active" style="--accent: #58cc02;" aria-label="Show Brainstorm">01</button>
+            <button type="button" class="case-ideation-pager-item" style="--accent: #1cb0f6;" aria-label="Show User Flow">02</button>
+            <button type="button" class="case-ideation-pager-item" style="--accent: #ce82ff;" aria-label="Show Early Wireframes">03</button>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- 06 Visual System -->
+        <section class="case-section" id="visual-system">
+          <p class="case-kicker">Visual System</p>
+
+          <!-- 明确的一分为二结构：左边 Design Tokens（Color 上半 +
+               Type 下半），右边 Visual Language（Elements）。左右
+               50/50、顶部对齐、底部对齐，纯靠 grid/留白/对齐建立
+               结构，不画任何可见分隔线。Color/Type/Elements 三个
+               label 共用同一个 .case-visual-label，字号/颜色/
+               top alignment 完全统一 -->
+          <div class="case-module case-visual-composition">
+            <div class="case-visual-tokens">
+              <div class="case-visual-tokens-row">
+                <p class="case-visual-label">Color</p>
+                <div class="case-visual-swatches">
+                  <div class="case-visual-swatch">
+                    <span class="case-visual-swatch-circle" style="background: #58cc02;"></span>
+                    <span class="case-visual-swatch-hex">#58CC02</span>
+                  </div>
+                  <div class="case-visual-swatch">
+                    <span class="case-visual-swatch-circle" style="background: #ffc800;"></span>
+                    <span class="case-visual-swatch-hex">#FFC800</span>
+                  </div>
+                  <div class="case-visual-swatch">
+                    <span class="case-visual-swatch-circle" style="background: #f39829;"></span>
+                    <span class="case-visual-swatch-hex">#F39829</span>
+                  </div>
+                  <div class="case-visual-swatch">
+                    <span class="case-visual-swatch-circle" style="background: #eb4233;"></span>
+                    <span class="case-visual-swatch-hex">#EB4233</span>
+                  </div>
+                  <div class="case-visual-swatch">
+                    <span class="case-visual-swatch-circle" style="background: #ce82ff;"></span>
+                    <span class="case-visual-swatch-hex">#CE82FF</span>
+                  </div>
+                  <div class="case-visual-swatch">
+                    <span class="case-visual-swatch-circle" style="background: #1cb0f6;"></span>
+                    <span class="case-visual-swatch-hex">#1CB0F6</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="case-visual-tokens-row">
+                <p class="case-visual-label">Type</p>
+                <div class="case-visual-type-block">
+                  <p class="case-visual-type-value">Courier</p>
+                  <p class="case-visual-type-specimen">Aa Bb Cc 0123</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="case-visual-elements">
+              <p class="case-visual-label">Elements</p>
+              <div class="case-visual-elements-media">
+                <!-- Elements 的排布 = 用户的 elements.svg 原稿，一个
+                     形状都不挪：直接引用文件本身，位置/大小/相对关系
+                     完全是用户排好的那一版 -->
+                <img
+                  class="case-visual-shapes"
+                  src="../assets/work/duolingo/elements.svg"
+                  alt="Duolingo brand shape elements: a rounded bar, circle, sparkle, eye, dome, smile curve, double-bump, pill, and owl-feet shape"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- 07 Experience / User Flow：video-led scrollytelling——中间
+             竖向视频（uishow.mp4）在滚动进入后 sticky 在原位，右侧
+             01–05 步骤文字随滚动依次点亮/淡出，取代原来"标题+
+             description+六条平铺文字+大 placeholder"的 UX 报告式排版。
+             桌面端的 pin/scrub 逻辑单独写在 case-duolingo.js 里（只服务
+             这一个 case 的行为，不进通用 js/case.js） -->
+        <section class="case-section" id="experience">
+          <p class="case-kicker">Experience</p>
+
+          <div class="case-module case-module-no-reveal case-experience-scroller" id="experience-scroller">
+            <div class="case-experience-sticky">
+              <div class="case-experience-video">
+                <!-- 透明视频双格式：HEVC-alpha 在前（Safari / Mac Chrome
+                     取它，行为与原来完全一致），VP9-alpha WebM 兜底
+                     （Windows Chrome/Edge、Firefox 取它）。原 mp4 未动 -->
+                <video muted playsinline preload="auto">
+                  <source src="../assets/work/duolingo/uishow.mp4" type="video/mp4" />
+                  <source src="../assets/work/duolingo/uishow.webm" type="video/webm" />
+                </video>
+
+                <div class="case-experience-caption case-experience-caption-left">
+                  <div class="case-experience-step" data-index="0" style="--accent: #58cc02; order: 1;">
+                    <span class="case-experience-step-index">01</span>
+                    <p class="case-experience-step-title">Enter</p>
+                    <p class="case-experience-step-desc">Goodbye Language Barriers</p>
+                  </div>
+                  <div class="case-experience-step" data-index="2" style="--accent: #ce82ff; order: 3;">
+                    <span class="case-experience-step-index">03</span>
+                    <p class="case-experience-step-title">Explore</p>
+                    <p class="case-experience-step-desc">recognize simple phrases through speech bubbles</p>
+                  </div>
+                  <div class="case-experience-step" data-index="4" style="--accent: #eb4233; order: 5;">
+                    <span class="case-experience-step-index">05</span>
+                    <p class="case-experience-step-title">Finish</p>
+                    <p class="case-experience-step-desc">Hello Friends Everywhere!</p>
+                  </div>
+                </div>
+
+                <div class="case-experience-caption case-experience-caption-right">
+                  <div class="case-experience-step" data-index="1" style="--accent: #1cb0f6; order: 2;">
+                    <span class="case-experience-step-index">02</span>
+                    <p class="case-experience-step-title">Choose</p>
+                    <p class="case-experience-step-desc">select the appropriate language for the country</p>
+                  </div>
+                  <div class="case-experience-step" data-index="3" style="--accent: #ffc800; order: 4;">
+                    <span class="case-experience-step-index">04</span>
+                    <p class="case-experience-step-title">Interact</p>
+                    <p class="case-experience-step-desc">engage with language through playful visual interaction</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- 08 Final Design -->
+        <section class="case-section" id="final-design">
+          <p class="case-kicker">Final Design</p>
+          <div class="case-module case-final-design-media">
+            <img src="../assets/work/duolingo/final ui.png" alt="Final UI across the six-screen flow, from Goodbye Language Barriers to Hello Friends Everywhere" loading="lazy" decoding="async" />
+          </div>
+          <!-- prototype 入口放在整组的右下角：6 张手机图这一行之下、
+               右对齐到最后一张手机的右缘。标题和手机图本身都没动 -->
+          <a class="case-final-design-proto" href="https://www.figma.com/proto/N3xHF0MjAMkG5U51DG8snh/Duolingo-Final-Prototype?node-id=1-275&p=f&viewport=591%2C254%2C0.17&t=aTBtuEdNFWUBFjh0-1&scaling=contain&content-scaling=fixed&starting-point-node-id=1%3A275&show-proto-sidebar=1&page-id=0%3A1" target="_blank" rel="noopener">
+            Explore the Prototype <span aria-hidden="true">&#8599;</span>
+          </a>
+        </section>
+        <hr class="case-divider" aria-hidden="true" />
+
+        <!-- 09 Campaign -->
+        <!-- Campaign：只放用户提供的一张图（c1，横幅实拍）和一段视频
+             （c2，手机样机），不放任何文字/kicker/caption。两个媒体都
+             不加容器背景/边框——直接露出页面黑底，和 Final Design/
+             Experience 的处理方式一致 -->
+        <section class="case-section" id="campaign">
+          <div class="case-module case-campaign-row">
+            <div class="case-campaign-media">
+              <img src="../assets/work/duolingo/c1.jpg" alt="Duolingo hanging banner campaign visual" loading="lazy" decoding="async" />
+            </div>
+            <div class="case-campaign-media">
+              <img src="../assets/work/duolingo/c2.jpg" alt="Person browsing the Duolingo Facebook page on a laptop" loading="lazy" decoding="async" />
+            </div>
+          </div>
+          <div class="case-module case-campaign-media">
+            <!-- 同上：透明视频双格式 -->
+            <video autoplay muted loop playsinline>
+              <source src="../assets/work/duolingo/c3.mp4" type="video/mp4" />
+              <source src="../assets/work/duolingo/c3.webm" type="video/webm" />
+            </video>
+          </div>
+        </section>
+      </div>
+    </div>
+    </div>
+
+    <!-- 结尾退场的滚动行程：canvas 用 sticky 停住之后，就是靠滚过这一段
+         把退场动画推完（进度 0→1）。它不是「空白黑屏」——这段时间视口里
+         显示的正是停住的最后一屏内容 + 逐渐浮现的下一个项目。高度只在
+         桌面端启用退场动效时才由 CSS 给出，其余情况是 0 -->
+    <div class="case-ending-spacer" id="ending-spacer" aria-hidden="true"></div>
+
+    <!-- 结尾：Next Project 提示 + Contact 合并成一个紧凑区域，脱离
+         上面 sidebar+content 的两栏 grid。Duolingo 按年份序
+         （2023→2022）下一个是 Glowyin；Glowyin 的独立 case 页还没做，
+         这两个链接现在会 404，等这轮 Duolingo 模板验收通过、开始
+         套用到其它 case 时一并建好——点击行为（进入下一个 case）
+         没有变，只是视觉从一整屏大 Hero 收成了小尺寸预览 -->
+    <section class="case-ending" id="case-next">
+      <!-- 这一层（.case-ending-inner）是唯一会被结尾动效碰到的元素：
+           js/case.js 只在这个 section 自己滚进视口时，对它做
+           translateX + opacity 的 scrub。上面所有 case study section
+           完全在动效范围之外，不被包裹、不被 pin、不被设置任何
+           opacity/transform——它们按正常文档流滚动完毕之后，才轮到
+           这里 -->
+      <!-- 结尾内容整体占据视口右侧，左边留出的空白正好让向左退场的
+           旧页面继续露出一部分——新旧两个项目短暂同时存在，而不是
+           旧的先消失、新的再出现。
+           上半：NEXT UP 标签 + 项目名 + 一句描述；
+           下半：左 Contact、右 [ VIEW ALL PROJECTS ] + 预览图 -->
+      <!-- 带 .case-ending-reveal 的元素会被「横向拉开」（clip-path 从右
+           往左收 → 全开），不是普通 fade；预览图不带这个类，它走的是
+           「从右下角由小放大」那条线，而且要比所有文字都更早出现。
+           各自的出场时机全部由 js/case.js 里的进度区间控制 -->
+      <div class="case-ending-inner">
+
+        <!-- 下半部分是两列：左列（分隔线 + Contact）和右列
+             （[ VIEW ALL PROJECTS ] + 预览图）。分隔线只压在左列上方，
+             不横穿到预览图那一侧 -->
+        <div class="case-ending-row">
+          <div class="case-ending-col-main">
+            <div class="case-ending-next">
+            <span class="case-kicker case-ending-reveal">Next Up</span>
+            <a class="case-ending-next-link" href="glowyin.html">
+            <span class="case-ending-next-title case-ending-reveal">Glowyin</span>
+            <span class="case-ending-next-tagline case-ending-reveal">A mirror that adjusts to you.</span>
+            </a>
+            </div>
+            <div class="case-ending-rule case-ending-reveal" aria-hidden="true"></div>
+            <div class="case-ending-contact case-ending-reveal">
+              <p class="case-ending-heading">Working on something?</p>
+              <p class="case-ending-sub">Tell me about it. I answer every message.</p>
+              <a class="case-ending-cta" href="mailto:yinzhaolei1113@gmail.com">GET IN TOUCH &#8599;</a>
+            </div>
+          </div>
+          <div class="case-ending-preview">
+            <a class="case-view-all case-ending-reveal" href="../index.html#work">[ VIEW ALL PROJECTS ]</a>
+            <!-- 下一个项目的真实 hero 素材，和 Work 页 Glowyin 卡片用的
+                 是同一个文件，不再是占位框 -->
+            <a class="case-ending-preview-link" href="glowyin.html">
+              <div class="case-ending-preview-image">
+                <video src="../assets/work/glowyin/hero.mp4" autoplay muted loop playsinline></video>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../vendor/gsap/gsap.min.js"></script>
+  <script src="../vendor/gsap/ScrollTrigger.min.js"></script>
+  <script src="../js/gsap-init.js"></script>
+  <script src="../js/site-chrome.js"></script>
+  <!-- 进场过渡第二段：morph 到 Hero 真实位置 + 按节奏揭示页面结构。
+       放在 case.js 之前，让它先接管进场状态 -->
+  <script src="../js/case-enter.js"></script>
+  <script src="../js/case.js"></script>
+  <!-- 只服务这一个 case 的交互（Experience 的 sticky video + 步骤字幕
+       滚动联动）——不进 js/case.js，避免把某一个项目的特定交互逻辑
+       变成所有 case 共用模板的一部分 -->
+  <script src="../js/case-duolingo.js"></script>
+</body>
+</html>

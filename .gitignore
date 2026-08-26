@@ -1,0 +1,13 @@
+.DS_Store
+node_modules
+
+# 原稿和未压缩素材：完整保留在本机，不进仓库。
+# GitHub Pages 只需要网站真正引用的那份压缩版；把原稿也推上去会让
+# 仓库逼近 Pages 的 1GB 上限，clone 和部署都会明显变慢。
+# 这些文件请另外备份到移动硬盘或云盘。
+assets/_original_backup/
+
+# 各 case 目录里留着的拍摄原稿（网页引用的是同目录下的转码版）
+assets/work/rise-streak/*.MOV
+assets/work/rise-streak/*.mov
+assets/work/rise-streak/campaign.png

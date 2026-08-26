@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zhaolei Yin — Product Designer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/hero-bg.css" />
+  <link rel="stylesheet" href="css/hero.css" />
+  <link rel="stylesheet" href="css/about.css" />
+  <link rel="stylesheet" href="css/site-chrome.css" />
+  <link rel="stylesheet" href="css/work.css" />
+  <link rel="stylesheet" href="css/outro.css" />
+
+  <!-- 跨页锚点防闪现：从 case 页点 Work/About/Contact 回来时带着
+       #hash，浏览器会先画出页面顶部（娃娃机 Hero），约 100ms 后解析到
+       目标元素才跳过去——那一下闪现就是这么来的（线上网络更慢会更明显）。
+       处理：带 hash 进来时先罩一层站底色的全屏遮罩（首帧是黑，不是
+       Hero），等 DOM 就绪、手动把目标定位到位后揭开——观感就是
+       "直接出现在目标 section"。无 hash 正常打开首页时完全不介入；
+       #hero 本来就在顶部，也不需要 -->
+  <style>
+    html.anchor-hold::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: #0a0a0a;
+      z-index: 2147483647;
+    }
+  </style>
+  <script>
+    (function () {
+      var h = location.hash;
+      if (!h || h === "#hero") return;
+      var r = document.documentElement;
+      r.classList.add("anchor-hold");
+      function done() {
+        var t = null;
+        try { t = document.getElementById(h.slice(1)); } catch (e) {}
+        if (t) t.scrollIntoView(); /* 兜底再定位一次，确保揭开时已在目标位 */
+        requestAnimationFrame(function () { r.classList.remove("anchor-hold"); });
+      }
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", function () {
+          requestAnimationFrame(done);
+        });
+      } else {
+        done();
+      }
+      /* 保险丝：无论发生什么，2.5s 后必定揭开，页面绝不会被罩死 */
+      setTimeout(function () { r.classList.remove("anchor-hold"); }, 2500);
+    })();
+  </script>
+</head>
+<body>
+
+  <!--
+    Hero 环境光背景
+    ─────────────────────────────
+    快捷键（桌面端）：
+      D  →  显示 / 隐藏调试面板
+      B  →  对比原始纯黑背景 / 环境光背景
+    所有参数也可以在控制台通过 window.HERO_BG 调整。
+  -->
+
+  <!-- 全局固定顶栏：贯穿 Hero / About / 后续所有区块，
+       始终钉在视口顶部，不随内容滚动或溶解 -->
+  <header class="site-nav" id="site-nav">
+    <a class="site-nav-logo" href="#hero">ZHAOLEI YIN</a>
+    <nav class="site-nav-links">
+      <a href="#work">Work</a>
+      <a href="#about">About</a>
+      <a href="#outro">Contact</a>
+    </nav>
+  </header>
+
+  <!-- 全局固定底栏：Hero/About 内低亮度，接近页面底部时增强
+       （亮度由 js/site-chrome.js 按滚动位置驱动） -->
+  <footer class="site-footer" id="site-footer">
+    <span>&copy; 2026 ZHAOLEI YIN</span>
+    <a class="site-footer-mid" href="https://www.linkedin.com/in/zhaolei-yin/" target="_blank" rel="noopener">LINKEDIN</a>
+    <a href="mailto:yinzhaolei1113@gmail.com">YINZHAOLEI1113@GMAIL.COM</a>
+  </footer>
+
+  <!-- ── 全局暗色环境层（含柔光，属于整个页面）──
+       静止时 = 原版 Hero 背景，无任何纹理；
+       滚动进入过渡区间时才挂载 Halftone 遮罩逐渐溶解 -->
+  <div class="layer-ambient" aria-hidden="true">
+    <canvas class="hero-bg" id="hero-bg-canvas"></canvas>
+  </div>
+
+  <section class="hero" id="hero">
+
+    <!-- ③ 娃娃机层：机身坐标系（697×1180），部件按 PS 定位稿百分比摆放 -->
+    <div class="hero-machine" aria-hidden="true">
+      <div class="machine-rig">
+        <!-- 层级（后 → 前）：机身 → 产品 → 抓夹 → 机檐盖板 → 摇杆 -->
+        <img class="machine-body" src="assets/machine/machine-body.svg" alt="" />
+
+        <!-- 抓夹·后层：爪体（吊杆）+ 左爪 —— 在产品后面 -->
+        <div class="claw-group" id="claw-group">
+          <img class="claw-state claw-l" id="claw-open-l" src="assets/machine/clawopen-left.svg" alt="" />
+          <img class="claw-state claw-l" id="claw-catch1-l" src="assets/machine/clawcatch1-left.svg" alt="" hidden />
+          <img class="claw-state claw-l" id="claw-catch2-l" src="assets/machine/clawcatch2-left.svg" alt="" hidden />
+          <img class="claw-body" src="assets/machine/clawbody.svg" alt="" />
+        </div>
+        <!-- 玻璃罩里的产品（在机身前 = 装在机器里；顺序 = 后 → 前） -->
+        <div class="machine-products" aria-hidden="true">
+          <img class="p-app-left" src="assets/products/app_left.png" alt="" />
+          <img class="p-star" src="assets/products/starpattern.png" alt="" />
+          <img class="p-metal" src="assets/products/metal.png" alt="" />
+          <img class="p-lego" src="assets/products/yellowlego.png" alt="" />
+          <img class="p-glowyin" src="assets/products/Glowyin.webp" alt="" />
+          <!-- 抓夹·前层：右爪 —— 在大理石之前、thinking/汉堡之后（夹住的立体感） -->
+          <div class="claw-group claw-group-front" id="claw-group-front" aria-hidden="true">
+            <img class="claw-state claw-r" id="claw-open-r" src="assets/machine/clawopen-right.svg" alt="" />
+            <img class="claw-state claw-r" id="claw-catch1-r" src="assets/machine/clawcatch1-right.svg" alt="" hidden />
+            <img class="claw-state claw-r" id="claw-catch2-r" src="assets/machine/clawcatch2-right.svg" alt="" hidden />
+          </div>
+          <img class="p-thinking" src="assets/products/thinking.svg" alt="" />
+          <img class="p-app-right" src="assets/products/app_right.png" alt="" />
+          <img class="p-graphic" src="assets/products/graphic.svg" alt="" />
+          <img class="p-burger" src="assets/products/burgerbox.webp" alt="" />
+        </div>
+
+        <!-- 机檐盖板：机身 SVG 裁出檐口区域，遮住伸缩杆顶部 -->
+        <img class="machine-canopy" src="assets/machine/machine-body.svg" alt="" aria-hidden="true" />
+
+        <!-- 摇杆（最上层） -->
+        <img class="joystick-stick" id="joystick-stick" src="assets/machine/joystick.svg" alt="" />
+        <img class="joystick-base" src="assets/machine/joybase.svg" alt="" />
+      </div>
+    </div>
+
+    <!-- ⑤ 文字层（导航已抽为全局固定顶栏，见 .site-nav） -->
+    <div class="hero-content">
+      <p class="hero-intro">
+        Hi, I'm Zhaolei Yin, Product Designer<br />
+        working on things people hold<br />
+        and things people tap.
+      </p>
+
+      <h1 class="hero-headline">
+        <span>Designing<br />products.</span>
+        <span>Creating<br />experiences.</span>
+      </h1>
+
+      <ol class="hero-steps">
+        <li>01&nbsp;&nbsp;MOVE THE CLAW</li>
+        <li>02&nbsp;&nbsp;GRAB A PROJECT</li>
+        <li>03&nbsp;&nbsp;OPEN IT</li>
+      </ol>
+
+      <p class="hero-tags">PRODUCT<br />UI/UX<br />AI</p>
+
+      <p class="hero-location">BASED IN SAN FRANCISCO,<br />AVAILABLE TO WORK</p>
+    </div>
+  </section>
+
+  <!-- About Me：滚动进入时灯光渐熄，实色纸白背景 -->
+  <section class="about" id="about">
+    <div class="about-inner">
+      <!-- 工牌：从上方（娃娃机出口方向）掉落悬挂，轻微摆动 -->
+      <div class="about-badge" id="about-badge" aria-label="Zhaolei Yin operator pass">
+        <!-- 完整合成自 PSD 全部图层：织带段可伸缩；下段含金属扣+塑料套+卡片+光效 -->
+        <img class="badge-rope" src="assets/badge/rope-full.png" alt="" />
+        <img class="badge-lower" src="assets/badge/lower.png" alt="" />
+      </div>
+      <div class="about-text">
+        <p class="about-lead">
+          Over the past eight years in the Bay Area, I've worked across
+          branding, industrial design, and digital products, bringing
+          different perspectives into a single design process.
+        </p>
+        <p class="about-sub">
+          From a <a class="u" href="https://www.marketingdive.com/news/coors-light-color-changing-nail-polish-holiday-rockies/636648/" target="_blank" rel="noopener">Coors Light</a> collaboration to an
+          AI&#8209;powered AR/VR storytelling project with
+          <a class="u" href="https://www.linkedin.com/feed/update/urn:li:activity:7491573577347928064/" target="_blank" rel="noopener">CBS News</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Work：连续作品流（参考 koto.com 的滚动切换逻辑，非视觉复刻）。
+       左侧信息区域整体 sticky，"My Work" 常驻不动，下方 .work-info-track
+       里叠放每个 case 的文字块，随右侧当前居中的 case 交叉淡入淡出。
+       右侧 .work-track 是连续纵向滚动轨道，所有 case 的媒体依次排列，
+       哪个媒体最接近视口垂直中心，哪个就是 active（透明度最高）。
+       新增案例：在 .work-info-track 和 .work-track 里各加一份对应块，
+       两边顺序要一一对应，改文字和 assets/work/<slug>/ 路径即可。 -->
+  <section class="work" id="work">
+    <div class="work-layout">
+      <div class="work-info">
+        <div class="work-info-inner">
+          <p class="work-kicker">My Work</p>
+          <div class="work-info-track">
+            <div class="work-info-item">
+              <div class="work-title-frame"><h3 class="work-title">Rise Streak</h3></div>
+              <p class="work-desc">
+                Waking up early is easy for a week. Rise Streak is built for
+                the second one, when the novelty is gone and it helps to have a
+                group that notices you showed up.
+              </p>
+              <a class="work-tag" href="work/rise-streak.html" aria-label="View Rise Streak case study">
+                <span class="work-tag-thumb">
+                  <!-- App 图标（黑色 R 造型 + 火苗吉祥物），单独一张图，
+                       和右侧大图/视频是两个不同文件 -->
+                  <img src="assets/work/rise-streak/icon.png" alt="" />
+                </span>
+                <span class="work-tag-text">
+                  <span>Mobile Productivity</span>
+                  <span>2026, UI/UX</span>
+                </span>
+              </a>
+            </div>
+
+            <div class="work-info-item">
+              <div class="work-title-frame"><h3 class="work-title">Step Inside Tomorrow</h3></div>
+              <p class="work-desc">
+                Step Inside Tomorrow turns a broadcast into a place. Walk into
+                the scene, change one variable, and watch the story end
+                differently.
+              </p>
+              <a class="work-tag" href="work/step-inside-tomorrow.html" aria-label="View Step Inside Tomorrow case study">
+                <span class="work-tag-thumb is-logo">
+                  <img src="assets/work/step-inside-tomorrow/icon.svg" alt="" />
+                </span>
+                <span class="work-tag-text">
+                  <span>CBS News Project</span>
+                  <span>2025, AR/VR Interaction</span>
+                  <span>Awarded Most Innovative AR/VR Concept</span>
+                </span>
+              </a>
+            </div>
+
+            <div class="work-info-item">
+              <div class="work-title-frame"><h3 class="work-title">SVP</h3></div>
+              <p class="work-desc">
+                Every glance at a phone mount is a second the road goes
+                unwatched. SVP moves the directions onto the windshield, where
+                the driver is already looking.
+              </p>
+              <a class="work-tag" href="work/svp.html" aria-label="View SVP case study">
+                <span class="work-tag-thumb">
+                  <img src="assets/work/svp/logo.svg" alt="" />
+                </span>
+                <span class="work-tag-text">
+                  <span>Smart Vision Path</span>
+                  <span>2024, AR Navigation</span>
+                </span>
+              </a>
+            </div>
+
+            <div class="work-info-item">
+              <div class="work-title-frame"><h3 class="work-title">Duolingo</h3></div>
+              <p class="work-desc">
+                The hardest part of a new language is the first sentence you
+                say out loud. This is a small game for two people, built to get
+                that sentence over with.
+              </p>
+              <a class="work-tag" href="work/duolingo.html" aria-label="View Duolingo case study">
+                <span class="work-tag-thumb">
+                  <img src="assets/work/duolingo/icon.png" alt="" />
+                </span>
+                <span class="work-tag-text">
+                  <span>Duolingo × Young Ones</span>
+                  <span>2023, Integrated Campaign · UX/UI</span>
+                </span>
+              </a>
+            </div>
+
+            <div class="work-info-item">
+              <div class="work-title-frame"><h3 class="work-title">Glowyin</h3></div>
+              <p class="work-desc">
+                A dorm desk has no room for a mirror and no good light.
+                Glowyin clips to the edge and fixes both.
+              </p>
+              <a class="work-tag" href="work/glowyin.html" aria-label="View Glowyin case study">
+                <span class="work-tag-thumb is-logo">
+                  <img src="assets/work/glowyin/icon.png" alt="" />
+                </span>
+                <span class="work-tag-text">
+                  <span>Glowyin</span>
+                  <span>2022, Industrial Design</span>
+                </span>
+              </a>
+            </div>
+
+            <div class="work-info-item">
+              <div class="work-title-frame"><h3 class="work-title">Chicken 5 Road</h3></div>
+              <p class="work-desc">
+                A 20-year-old fried chicken shop in Wuhan whose signage had
+                gone quiet. The rebrand gives it back the personality regulars
+                still talk about.
+              </p>
+              <a class="work-tag" href="work/chicken-5-road.html" aria-label="View Chicken 5 Road case study">
+                <span class="work-tag-thumb">
+                  <img src="assets/work/chicken-5-road/icon.png" alt="" />
+                </span>
+                <span class="work-tag-text">
+                  <span>Chicken 5 Road</span>
+                  <span>2021, Brand Identity</span>
+                </span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="work-track">
+        <a class="work-media" id="work-media-rise-streak" href="work/rise-streak.html" aria-label="View Rise Streak case study">
+          <video src="assets/work/rise-streak/hero.mp4" autoplay muted loop playsinline></video>
+        </a>
+
+        <!-- CBS 视频：静音自动循环播放，无控件（首页素材，不需要声音） -->
+        <a class="work-media" id="work-media-step-inside-tomorrow" href="work/step-inside-tomorrow.html" aria-label="View Step Inside Tomorrow case study">
+          <video src="assets/work/step-inside-tomorrow/hero.mp4" autoplay muted loop playsinline></video>
+        </a>
+
+        <a class="work-media" id="work-media-svp" href="work/svp.html" aria-label="View SVP case study">
+          <img src="assets/work/svp/hero.jpg" alt="SVP" />
+        </a>
+
+        <a class="work-media" id="work-media-duolingo" href="work/duolingo.html" aria-label="View Duolingo case study">
+          <video src="assets/work/duolingo/hero.mp4" autoplay muted loop playsinline></video>
+        </a>
+
+        <!-- 静音自动循环播放，无控件 -->
+        <a class="work-media" id="work-media-glowyin" href="work/glowyin.html" aria-label="View Glowyin case study">
+          <video src="assets/work/glowyin/hero.mp4" autoplay muted loop playsinline></video>
+        </a>
+
+        <!-- GIF 本身就是动图，img 标签直接自动播放 -->
+        <a class="work-media" id="work-media-chicken-5-road" href="work/chicken-5-road.html" aria-label="View Chicken 5 Road case study">
+          <img src="assets/work/chicken-5-road/hero.gif" alt="Chicken 5 Road" />
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Outro：Work 结束后的收尾，是 Hero→About 那套 Halftone 溶解的
+       反向版本——不是新场景，用的是同一套贴纸素材 + Hero 娃娃机的
+       爪子，从"点阵稀疏、几乎看不见"逐渐恢复成实体，最后停在一个
+       爪子上，呼应回 Hero 的视觉语言，形成闭环。背景透明，露出
+       全局 .layer-ambient 画布（和其余区块共用同一张黑）。
+       不碰 window.HERO_BG 的任何参数——上一版在这里误把环境光的
+       全局亮度写成了 0（在页面一加载、还没滚到这里时就已经生效），
+       把 Hero 本身的光效也带崩了；这次彻底不碰那部分状态，只做
+       局部的 mask 视觉，避免重蹈覆辙。行为由 js/outro.js 驱动。 -->
+  <section class="outro" id="outro">
+    <div class="outro-stage">
+      <div class="outro-materials" id="outro-materials">
+        <span class="outro-sticker" style="--x: 15%; --size: 6.5vw;"><span class="sw"><img src="assets/float-back/float-chain.svg" alt="" /></span></span>
+        <span class="outro-sticker" style="--x: 84%; --size: 7.5vw;"><span class="sw"><img src="assets/float-back/float-squiggle.svg" alt="" /></span></span>
+        <span class="outro-sticker" style="--x: 14%; --size: 5.5vw;"><span class="sw"><img src="assets/float-back/float-gear.svg" alt="" /></span></span>
+        <span class="outro-sticker" style="--x: 86%; --size: 6vw;"><span class="sw"><img src="assets/float-back/float-badge.svg" alt="" /></span></span>
+        <span class="outro-sticker" style="--x: 50%; --size: 5vw;"><span class="sw"><img src="assets/float-back/float-blob.svg" alt="" /></span></span>
+        <div class="outro-claw" id="outro-claw" aria-hidden="true">
+          <img class="oc-body" src="assets/machine/clawbody.svg" alt="" />
+          <img class="oc-arm oc-l" src="assets/machine/clawopen-left.svg" alt="" />
+          <img class="oc-arm oc-r" src="assets/machine/clawopen-right.svg" alt="" />
+        </div>
+      </div>
+      <!-- 爪子正下方的简历下载：点击后爪子降下来把它夹住、提起，随即
+           触发 resume.pdf 的下载（文件后续再补，路径先占住）。动画在
+           js/outro.js；reduced-motion / 没有 GSAP 时它就是一个普通的
+           下载链接，点了直接下载 -->
+      <a class="outro-resume" id="outro-resume" href="assets/resume.pdf" download>resume.pdf</a>
+      <h2 class="outro-headline" id="outro-headline">
+        Caught everything?<br />
+        Let&rsquo;s make the next one.
+      </h2>
+      <!-- 叠在文案之上的第二层——和 .outro-materials 是同一批贴纸池，
+           js/outro.js 会随机把其中一部分挪到这里：跟 Hero 的
+           .hero-float-front(压在文字之上) / .hero-float-back(压在
+           文字之下) 是同一套前后景深逻辑，只是 Outro 只有一段文案，
+           不需要像 Hero 那样分好几层 -->
+      <div class="outro-materials-front" id="outro-materials-front"></div>
+    </div>
+  </section>
+
+  <!-- Work 区域自定义娃娃机爪子跟随光标：hover Case Hero Media 时出现，
+       替代之前的 VIEW CASE 悬浮按钮。爪子素材沿用 Hero 娃娃机同一视觉语言，
+       行为由 js/work-cursor.js 驱动（桌面 + 支持 hover 的指针设备才启用，
+       触屏/无 GSAP/减少动态效果时自动跳过，保留原生链接点击）。 -->
+  <div class="work-cursor" id="work-cursor" aria-hidden="true">
+    <div class="work-cursor-inner">
+      <span class="work-cursor-claw">
+        <img class="wc-body" src="assets/cursor/claw-body.svg" alt="" />
+        <img class="wc-arm wc-arm-l" src="assets/cursor/claw-open-left.svg" alt="" />
+        <img class="wc-arm wc-arm-r" src="assets/cursor/claw-open-right.svg" alt="" />
+      </span>
+      <span class="work-cursor-label">VIEW CASE</span>
+    </div>
+  </div>
+
+  <!-- 漂浮贴纸：视口固定层，横跨 Hero 与 About 同一个空间
+       Hero 内有前后景深；过渡时压在 About 纸面上继续飘，停稳后才淡出 -->
+  <div class="hero-float hero-float-back" id="float-back" aria-hidden="true">
+    <span class="fl" style="--x: 5%;  --size: 6vw;   --dur: 32s; --delay: -20s; --sway: 22px; --spin: 17s; --rotEnd: 360deg;"><span class="sw"><img src="assets/float-back/float-chain.svg" alt="" /></span></span>
+    <span class="fl" style="--x: 30%; --size: 6.5vw; --dur: 36s; --delay: -6s;  --sway: 26px; --spin: 23s; --rotEnd: -360deg;"><span class="sw"><img src="assets/float-back/float-squiggle.svg" alt="" /></span></span>
+    <span class="fl" style="--x: 62%; --size: 9.5vw; --dur: 30s; --delay: -26s; --sway: 24px; --spin: 20s; --rotEnd: 360deg;"><span class="sw"><img src="assets/float-back/float-inspirational.svg" alt="" /></span></span>
+    <span class="fl" style="--x: 90%; --size: 5.5vw; --dur: 28s; --delay: -14s; --sway: 20px; --spin: 14s; --rotEnd: -360deg;"><span class="sw"><img src="assets/float-back/float-gear.svg" alt="" /></span></span>
+  </div>
+  <div class="hero-float hero-float-front" id="float-front" aria-hidden="true">
+    <span class="fl" style="--x: 17%; --size: 7vw;   --dur: 26s; --delay: -10s; --sway: 30px; --spin: 15s; --rotEnd: -360deg;"><span class="sw"><img src="assets/float-back/float-design.svg" alt="" /></span></span>
+    <span class="fl" style="--x: 42%; --size: 8.5vw; --dur: 29s; --delay: -22s; --sway: 34px; --spin: 19s; --rotEnd: 360deg;"><span class="sw"><img src="assets/float-back/float-blob.svg" alt="" /></span></span>
+    <span class="fl" style="--x: 79%; --size: 4vw;   --dur: 24s; --delay: -4s;  --sway: 26px; --spin: 12s; --rotEnd: -360deg;"><span class="sw"><img src="assets/float-back/float-badge.svg" alt="" /></span></span>
+  </div>
+
+  <!-- GSAP + ScrollTrigger（通过 npm 安装，node_modules 内的 dist 文件直接引入，
+       项目本身无构建工具，不引入 bundler）。先只加载与注册，
+       不驱动任何现有动画——迁移工作按需逐个进行。 -->
+  <script src="vendor/gsap/gsap.min.js"></script>
+  <script src="vendor/gsap/ScrollTrigger.min.js"></script>
+  <script src="js/gsap-init.js"></script>
+
+  <script src="js/hero-bg.js"></script>
+  <script src="js/hero-machine.js"></script>
+  <script src="js/hero-float.js"></script>
+  <script src="js/hero-about.js"></script>
+  <script src="js/site-chrome.js"></script>
+  <script src="js/work-track.js"></script>
+  <script src="js/work-cursor.js"></script>
+  <!-- Work → Case Study 进场过渡的第一段（目前只接 Duolingo）-->
+  <script src="js/work-transition.js"></script>
+  <script src="js/outro.js"></script>
+</body>
+</html>

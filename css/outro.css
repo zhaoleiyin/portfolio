@@ -1,0 +1,186 @@
+/* ══════════════════════════════════════════════════
+   Outro：Work 结束后的收尾——Hero→About 那套 Halftone 溶解的
+   反向版本。贴纸的漂浮运动直接复用 Hero 那一套（js/outro.js 里
+   是 js/hero-float.js 同一份下落/摇摆/翻转逻辑的独立副本，
+   数值范围、节奏都一致，只是作用在 Outro 自己的贴纸元素上，
+   不会把 DOM 换到 Hero 的图层里去）——不是"从屏幕外飞入"的
+   一次性入场动画，是持续运行的、和 Hero 一样的漂浮。
+   Outro 这边唯一"反向"的部分是材质：--dotR 从稀疏点阵随滚动
+   逐渐变大，恢复成 Hero 里那种自然漂浮的实体贴纸。
+   随后一个爪子（截短过的杆，视觉重点在爪子本体）带阻尼摆动地
+   荡出来；最后收尾文案淡入。背景透明，露出全局 .layer-ambient
+   画布，和其余区块共用同一张黑。
+   ══════════════════════════════════════════════════ */
+
+.outro {
+  position: relative;
+  min-height: 170vh;
+  background: transparent;
+  color: #f2f2f2;
+  /* 往上吃掉一段 Work 结尾的滚动距离，让 Outro 的揭示提前开始——
+     Work 自己的 ScrollTrigger 范围很宽（top bottom → bottom top），
+     最后一个 case 的透明度衰减在 Work 区块滚出视口的过程中仍在继续
+     生效，这里把 Outro 往上拉，让它的贴纸/爪子揭示窗口和那段"最后
+     一个 case 正在淡出"的时间重叠，而不是等一大段纯黑滚完才开始 */
+  margin-top: -38vh;
+}
+
+.outro-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Halftone 遮罩挂在这一整层（贴纸+爪子共同的父容器，铺满整个
+   stage），不是挂在每个贴纸/爪子自己的小盒子上——遮罩的网格是
+   按"挂载它的那个元素自身的 border-box"来定位/裁切的，贴纸的
+   下落靠外层 translate、旋转靠内层 img 自己转，旋转不会撑大外层
+   span 的布局盒子，遮罩若挂在贴纸自己身上，转到对角线探出这个
+   小盒子的那部分像素会直接被裁掉（贴纸旋转时出现的方形硬边缺角，
+   就是这个原因）。挂在铺满整个 stage 的大容器上、参照系足够大，
+   贴纸在里面怎么转都不会碰到裁切边界——和 Hero 的
+   .hero-float.dissolving 挂在整个漂浮层上是同一个道理 */
+.outro-materials {
+  position: absolute;
+  inset: 0;
+}
+/* 叠在文案（.outro-headline）之上的第二层，装 js/outro.js 随机挑出来
+   "压在文字前面"的那部分贴纸——在 DOM 里排在 headline 之后，天然
+   盖在文字上面，不需要额外设 z-index。跟 .outro-materials 是完全
+   独立的两个盒子（不是同一个盒子里靠 z-index 分层），因为「盖在
+   文字下面」和「盖在文字上面」这两批贴纸相对 headline 的绘制顺序
+   本来就是"整层在前/整层在后"，不是同层内部的前后关系 */
+.outro-materials-front {
+  position: absolute;
+  inset: 0;
+  /* 两层贴纸容器都铺满整个 stage，纯装饰——必须放行鼠标事件，
+     否则 front 这层会把叠在它下面的 resume.pdf 链接的点击整个吃掉
+     （链接看得见、点不着） */
+  pointer-events: none;
+}
+.outro-materials {
+  pointer-events: none;
+}
+
+/* 贴纸定位/尺寸和 Hero 的 .hero-float .fl 完全一致：
+   left 由 --x 指定，top 固定 -20%（起点在画框上方一点），
+   下落/摇摆/翻转全部是 js/outro.js 里 WAAPI 动画写的 transform */
+.outro-sticker {
+  position: absolute;
+  left: var(--x);
+  top: -20%;
+  will-change: transform;
+}
+.outro-sticker .sw {
+  display: block;
+}
+.outro-sticker img {
+  display: block;
+  width: var(--size);
+  min-width: 36px;
+}
+/* 爪子：杆比 Hero 娃娃机原始素材截短了不少（原图杆占了 62% 的高度），
+   只留一小截，容器整体裁掉杆的上半部分——视觉重点落在夹爪机构上。
+   transform-origin 在顶部，配合 JS 的弹簧旋转做"吊着摆"的支点 */
+.outro-claw {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: clamp(74px, 7vw, 112px);
+  aspect-ratio: 108 / 288;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  transform-origin: 50% 0%;
+  will-change: transform;
+}
+.outro-claw .oc-body {
+  position: absolute;
+  left: 0;
+  top: -46.5%;
+  width: 100%;
+}
+/* 截短杆的位置正好切在杆身中段，露出两条没有封口的竖线——
+   补一条横线在容器顶端把两条竖线接起来，看起来像杆子本来就
+   截止在这里、有个封了口的断面，而不是素材被生硬裁掉一截。
+   x 范围/宽度取自 clawbody.svg 里杆子矩形的 viewBox 坐标
+   (47.66~59.66 / 108 全宽)，和 oc-body 用同一套百分比坐标系 */
+.outro-claw::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 44.1%;
+  width: 11.1%;
+  height: 1.5px;
+  background: #f2f2f2;
+}
+.outro-claw .oc-arm {
+  position: absolute;
+  top: 78.1%;
+  width: 32.41%;
+}
+/* 合爪的支点放在各自臂根内侧（靠近杆的那一角），js/outro.js 夹取
+   动画只旋转这两条臂，臂根不动、臂尖向内收，像真的钳口在合拢 */
+.outro-claw .oc-l { left: 1.65%; transform-origin: 88% 12%; }
+.outro-claw .oc-r { left: 66.46%; transform-origin: 12% 12%; }
+
+/* 爪子正下方的 resume.pdf——和页脚同一档 mono 小字。淡入进度由
+   js/outro.js 写在 --reveal 上（和爪子同节奏出现），叠在自己的
+   0.85 常态透明度上，hover 提到全亮；reduced-motion / 无 JS 时
+   --reveal 走默认值 1，直接可见可点 */
+.outro-resume {
+  position: absolute;
+  left: 50%;
+  /* 落在爪子（底边 ~59%）和 headline（顶边 ~73%）的正中间 */
+  top: 66.5%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #f2f2f2;
+  opacity: calc(var(--reveal, 1) * 0.85);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: opacity 0.25s ease;
+}
+.outro-resume:hover {
+  opacity: var(--reveal, 1);
+}
+
+/* 反向 Halftone：dotR 越大越接近实体，越小越接近稀疏点阵。
+   两层（文字前/文字后）用同一个节奏，js/outro.js 会往两边写同一个
+   --dotR 值 */
+.outro-materials,
+.outro-materials-front {
+  --dotR: 5.6px;
+  -webkit-mask-image: radial-gradient(circle, #000 var(--dotR), transparent calc(var(--dotR) + 0.6px));
+  -webkit-mask-size: 7px 7px;
+  mask-image: radial-gradient(circle, #000 var(--dotR), transparent calc(var(--dotR) + 0.6px));
+  mask-size: 7px 7px;
+}
+
+.outro-headline {
+  position: absolute;
+  left: 50%;
+  top: 77%;
+  transform: translate(-50%, -50%);
+  width: max-content;
+  max-width: 88vw;
+  text-align: center;
+  font-family: var(--font-sans, "Geist", sans-serif);
+  font-size: clamp(22px, 3.2vw, 48px);
+  font-weight: 500;
+  line-height: 1.24;
+  letter-spacing: 0.002em;
+}
+
+@media (max-width: 640px) {
+  .outro {
+    min-height: 170vh;
+  }
+  .outro-headline {
+    top: 80%;
+  }
+}

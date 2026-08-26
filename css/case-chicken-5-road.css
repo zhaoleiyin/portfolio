@@ -1,0 +1,195 @@
+/* ══════════════════════════════════════════════════
+   Chicken 5 Road Case Study 专属样式——只服务这一个 case，
+   不进 css/case.css 那份跨 case 共用的模板文件。
+
+   和 Duolingo 的关系：结构、侧栏、间距、进场/结尾动效全部来自
+   共用模板，这里只补一件模板里没有的东西——Branding 项目需要的
+   图片排版原语（通栏 / 双图 / 局部大图）。Duolingo 是 UX 项目、
+   右侧是大量流程图和文字，用不到这些。
+   ══════════════════════════════════════════════════ */
+
+/* 全篇正文/大字钉死 15px：和 Duolingo、SVP 同一条规则——
+   模板默认的 clamp 会随视口浮到 19px，四个 case 并排看字号就不一样。
+   层级只靠字重和透明度，不靠字号 */
+.case-content .case-caption {
+  font-size: 15px;
+}
+.case-content .case-pull-quote {
+  font-size: 15px;
+}
+
+/* 侧栏项目标题：用这个项目自己的品牌黄。数值不是目测的——从官方
+   logo 规范图（3.png）里采样出来的主黄就是 #FFEA5F，和 logo 上的
+   字色一致。只改这个 case 的标题颜色，不动 case.css 里 .case-title
+   的通用样式（字号/字重/行高都不变，其它 case 不受影响），做法和
+   Duolingo 用 .case-title-accent 上绿色完全一样 */
+.case-title-accent {
+  color: #ffea5f;
+}
+
+/* Hero：首页 Work 卡片是 16:9 的硬边矩形，这里保持同一个比例和
+   同一种裁切方式，shared-element 过渡才会让人觉得是同一张图在
+   连续展开，而不是换了一张新图。这条和 case.css 里 Duolingo Hero
+   用的是同一套规则，只是那边是 <video>、这边是 <img>/GIF */
+.case-module-hero img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+/* ── 图片排版原语：等图片到位后，按每张图的真实比例挑用 ──
+   通栏：横图、需要完整展示的主视觉 */
+.case-media-full img,
+.case-media-full video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 双图并排：两张竖图或两张同高的横图。gap 沿用模板里
+   .case-campaign-row 同一档，保证全站图组间距一致 */
+.case-media-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--case-gap);
+  align-items: start;
+}
+.case-media-pair img,
+.case-media-pair video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 局部大图：不铺满整栏，收在中间偏窄的宽度，用于单张竖图或
+   需要留白衬托的细节图 */
+.case-media-inset {
+  width: 72%;
+  margin: 0 auto;
+}
+.case-media-inset img,
+.case-media-inset video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Section 开头：kicker 在左，引言在右，两者顶边对齐（不是引言
+   垂直居中、也不是压在 kicker 下面一行）。引言本身直接复用模板里
+   Overview 那个右侧块（.case-overview——42% 宽、靠右对齐），
+   所以位置/宽度/字号和 Overview 那段完全一致 */
+.case-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 4vw;
+}
+/* 并排之后不需要那段把它推到下一行的上边距 */
+.case-section-head .case-section-intro {
+  margin-top: 0;
+}
+.case-section-head .case-kicker {
+  flex: none;
+}
+
+/* ── 结尾预览缩略图：娃娃机控制面板的局部特写 ──
+   .case-ending-preview-image 本身已经是 16:9 + overflow:hidden 的固定
+   矩形（模板给的），所以这里只负责把摇杆摆进这个框里当作一张"缩略图
+   画面"。摇杆放大到超出框体、再被框裁掉，得到的就是局部特写的观感，
+   而不是一个缩在中间的小图标。背景沿用模板给预览框的同一个底色，
+   不另起视觉语言 */
+.ending-joystick {
+  position: absolute;
+  inset: 0;
+  overflow: hidden; /* 双保险：摆动绝不会跑出画面 */
+}
+/* 这一页的预览不是图片，是绝对定位画出来的摇杆场景——画框必须有
+   确定的高度（模板的"图片自适应高度"对空容器会塌成 0）。比例给
+   16:9，和其它 case 预览素材同一个规格，高度就和它们一致，不搞
+   特殊；摇杆由上面的 translate 居中规则摆在画框正中 */
+.case-ending.is-overlay .case-ending-preview-image {
+  aspect-ratio: 16 / 9;
+}
+/* 复刻首页 .machine-rig 的 697×1180 坐标系，整体放大到 140% 并向左上
+   偏移，让「控制面板 + 摇杆」那一块（机身 SVG 里 y 610~890 那段）正好
+   落进这个 16:9 的预览框，超出的部分由外层 overflow:hidden 裁掉——
+   得到的是局部特写，而不是一个缩在中间的小图标。
+   数值由机身坐标反推：裁切区 x 99.6→597.4 / y 610→890 */
+/* 居中不再用写死的负偏移（那组数值是按旧的 16:9 框反推的，预览框
+   改成 34vh 固定高之后长宽比会随视口变，写死就偏了）：把 rig 的
+   50%/50% 锚到框中心，再用 translate 把组件的几何中心（x 348.5 /
+   y 713 → rig 自身的 50% / 60.42%）拉到锚点上——任何框比例下都居中 */
+.case-ending-preview-image .ending-joystick-rig {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 129.05%;
+  aspect-ratio: 697 / 1180;
+  transform: translate(-50%, -60.42%);
+}
+
+/* 选择器必须带上 .case-ending-preview-image：模板里
+   「.case-ending-preview-image img { width:100%; height:100%;
+   object-fit:cover }」是给整张预览图用的，特异性比单个类名高，
+   不这样写的话下面的尺寸全部会被它覆盖（图会被拉成满框） */
+.case-ending-preview-image .ending-joystick img {
+  position: absolute;
+  display: block;
+  height: auto;
+  object-fit: fill;
+}
+
+/* 下面三层的百分比和 hero.css 里的原值完全一致——因为坐标系相同，
+   所以摇杆、底座、面板的相对位置和首页一模一样，没有重新对位 */
+
+/* 机身：只要摇杆下面那块方形安装板，不要外面的控制面板边框、
+   也不要两侧的圆形按钮。机身 SVG 里这三者是分开的图元——
+   方板 x 290.3~406.6 / y 716.2~811.1，圆按钮在 x≈189 和 x≈507，
+   面板边框在 y=688 / y=850——所以按方板的包围盒 clip 一下，
+   另外两样天然被排除在外（各留 1.5 单位出血，描边不会被切掉） */
+.case-ending-preview-image .ending-joystick-body {
+  inset: 0;
+  width: 100%;
+  z-index: 1;
+  clip-path: inset(60.57% 41.45% 31.14% 41.44%);
+}
+/* 杆：支点在杆底（和 hero.css 里 .joystick-stick 同一个
+   transform-origin），所以只会倾斜、不会整体平移 */
+.case-ending-preview-image .ending-joystick-stick {
+  left: 45.98%;
+  top: 54.2%;
+  width: 8.03%;
+  transform-origin: 50% 90%;
+  z-index: 2;
+}
+/* 底座：固定不动，压在杆的根部 */
+.case-ending-preview-image .ending-joystick-base {
+  left: 44.55%;
+  top: 63.1%;
+  width: 10.9%;
+  z-index: 3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* 不做摆动时保持静态特写，画面本身仍然成立 */
+  .ending-joystick-stick {
+    transform: none !important;
+  }
+}
+
+/* 图片下方的小字说明，沿用模板的正文层级，不另起字号 */
+.case-media-caption {
+  margin-top: var(--case-gap);
+  color: #7d7d78;
+}
+
+@media (max-width: 900px) {
+  /* 窄屏下双图改成上下堆叠，和模板里其它图组的降级方式一致 */
+  .case-media-pair {
+    grid-template-columns: 1fr;
+  }
+  .case-media-inset {
+    width: 100%;
+  }
+}

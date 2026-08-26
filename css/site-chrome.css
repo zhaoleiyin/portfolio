@@ -1,0 +1,94 @@
+/* ══════════════════════════════════════════════════
+   全局界面框架：顶部导航 + 底部信息栏
+   贯穿 Hero / About / 后续所有区块，始终钉在视口边缘，
+   不参与任何区块的滚动、溶解或过渡——克制、无厚重背景，
+   只靠文字本身的层级与半透明度和内容区分开。
+   ══════════════════════════════════════════════════ */
+
+/* 允许跨文档（真实换页）也走 View Transitions——Work 页点进某个
+   case 详情页时，浏览器会原生把两边同名的 view-transition-name
+   元素 morph 过渡，其余没命名的内容当作默认 root 快照整体
+   crossfade。这条声明要在两边页面都加载的样式表里，所以放在
+   全站共用的 site-chrome.css。目前只有 Chrome/Edge 支持，其它
+   浏览器会忽略这条声明、直接正常跳转，是原生的渐进增强，
+   不需要额外兼容代码 */
+/* 已停用：Work → Case 的进场过渡改成自己用 GSAP 实现的
+   shared-element morph（js/work-transition.js + js/case-enter.js），
+   那套能精确控制「图片先扩大、结构后揭示」的先后节奏。
+   如果这里同时还开着原生 Cross-document View Transition，浏览器会
+   再叠一层自己的 morph + root crossfade，两套动画打架，而且 crossfade
+   正好是我们不想要的「旧图淡出、新图淡入」。
+@view-transition {
+  navigation: auto;
+} */
+
+.site-nav,
+.site-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 60; /* 高于所有滚动内容层，低于调试面板 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--pad-x, 4.2%);
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(11px, 0.85vw, 15px);
+  letter-spacing: 0.04em;
+  color: #f2f2f2;
+  pointer-events: none; /* 空白区域不拦截点击/拖拽，只有文字本身可点 */
+}
+.site-nav a,
+.site-footer a {
+  pointer-events: auto;
+}
+
+/* ── 顶部导航 ── */
+.site-nav {
+  top: 0;
+  height: 64px;
+  text-transform: uppercase;
+}
+.site-nav-logo {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 700;
+}
+.site-nav-links {
+  display: flex;
+  gap: 2.4em;
+}
+.site-nav-links a {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.88;
+  transition: opacity 0.25s ease;
+}
+.site-nav-links a:hover {
+  opacity: 0.5;
+}
+
+/* ── 底部信息栏：Hero/About 内低亮度，靠近页面底部时增强
+   （不透明度由 js/site-chrome.js 按滚动位置连续驱动） */
+.site-footer {
+  bottom: 0;
+  height: 56px;
+  text-transform: uppercase;
+  opacity: 0.36; /* 初始低亮度，JS 接管后覆盖 */
+  transition: opacity 0.4s ease;
+}
+.site-footer a {
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.85;
+  transition: opacity 0.25s ease;
+}
+.site-footer a:hover {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .site-footer-mid {
+    display: none; /* 窄屏只留版权与邮箱，避免拥挤 */
+  }
+}

@@ -1,0 +1,428 @@
+/* ══════════════════════════════════════════════════
+   CBS — Step Inside Tomorrow 专属样式。
+   外围严格继承共用模板（css/case.css）：sidebar 宽度、content
+   width、图片宽度、section 边界、typography 层级、间距、结尾，
+   这里一概不碰。
+
+   内容视觉语言 = 项目本身的 Dark Glassmorphism / Tinted Glass UI：
+   中性灰的半透明毛玻璃 + backdrop blur + 非常克制的边缘高光（只有
+   顶部一条 1px 内侧亮线），卡片背后垫一层极淡的辉光，让玻璃有东西
+   可透。不是纯蓝色卡片，也不是重效果的 Apple Liquid Glass——像 CBS
+   数字新闻界面：沉浸、科技感、克制。
+   卡片不是用来装所有信息的：只有需要被强调或分类的信息才进
+   card / pill / strip，其余直接裸排在黑底上。
+   ══════════════════════════════════════════════════ */
+
+/* CBS Blue 全页只有一档：压暗、降饱和的深蓝（#4d7cff 那版太亮太跳，
+   在黑色系统里像 neon）。蓝色只做重点识别，不做页面最抢眼的元素 */
+.case-title-accent {
+  color: #5872bd;
+}
+
+/* ── 占位块：flat 深灰盒 + 居中小号 mono 标签（和 SVP 的 .svp-ph
+   同一套语言）。比例由各自的 --r 决定——现在排的就是最终版式，
+   之后换真图不跳版 */
+.sit-ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: var(--r, 16 / 9);
+  width: 100%;
+  min-height: 0;
+  background: #141417;
+  color: #6f6f76;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 12px;
+}
+
+/* ── 小号 mono 标签 ── */
+.sit-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8c8c86;
+}
+
+/* section 引言统一降到全站次级正文透明度（15px 不变，层级只靠
+   透明度），和其它 case 的 description 同一档 */
+.case-caption.sit-dim {
+  opacity: var(--case-text-secondary-opacity);
+}
+
+/* ── 玻璃卡片原语（全 case 唯一的一种卡片材质）──
+   中性灰的半透明毛玻璃：用极低透明度的白（在黑底上就是灰玻璃），
+   不带蓝底色——蓝只留给文字标签当识别色。blur 给足，边缘一条很细
+   的中性白描边 + 顶部一条极轻内高光表现玻璃厚度。
+   不发光、不 neon、不做明显渐变 */
+.sit-stat {
+  position: relative;
+  background: rgba(255, 255, 255, 0.045);
+  -webkit-backdrop-filter: blur(22px) saturate(115%);
+  backdrop-filter: blur(22px) saturate(115%);
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+/* 玻璃卡片所在的模块背后垫一层极淡的辉光——纯黑底下毛玻璃没有
+   任何东西可透，会退化成一块平的灰色。这层微光就是玻璃"隐约透出"
+   的背景，带一点点冷蓝，亮度压得很低 */
+.case-module.sit-stats {
+  position: relative;
+}
+.case-module.sit-stats::before {
+  content: "";
+  position: absolute;
+  inset: -12% -3%;
+  z-index: 0;
+  background:
+    radial-gradient(42% 60% at 24% 30%, rgba(38, 74, 158, 0.10), transparent 70%),
+    radial-gradient(38% 55% at 78% 75%, rgba(38, 74, 158, 0.06), transparent 70%);
+  pointer-events: none;
+}
+.case-module.sit-stats > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ══ 侧栏：获奖那行替代了原来的 "AR / VR / XR — 2025"，是这个项目
+   的荣誉不是分类，所以给它压暗的 CBS 蓝、和其它 meta 行区分开 ══ */
+.case-meta-award {
+  color: #5872bd;
+}
+
+/* ══ 全 case 的句子层级 ══
+   每个 section 开头那句（What if the news became…、Taking the
+   experience beyond the headset.、From watching the news to
+   experiencing it.）一律用正文字号，各占一行——层级
+   完全交给字重和颜色，不靠字号（和全站"字号不制造层级"同一条
+   原则）。模板的 .case-module-typography 有 26em 上限，会让大字
+   提前折行，这一页解掉 */
+.case-module-typography {
+  max-width: none;
+}
+.case-pull-quote {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: #f2f2f2;
+  white-space: nowrap;
+}
+/* 正文优先把一行填满再换行：模板给 .case-caption 的 42em 会让段落
+   早早断开，这里放开到内容列全宽 */
+.case-content .case-caption {
+  max-width: none;
+}
+.case-overview .case-caption {
+  max-width: none;
+}
+/* ══ 02 Research ══
+   Target Audience → Data → Barrier → Insight → Opportunity。
+   除了三张数据卡，这一段其余全部裸排在黑底上——层级只靠 mono 标签、
+   字重、透明度和那一点蓝，不加大标题、不加 persona 卡、不写长正文 */
+
+/* Target Audience：一行排完（标签 / 主行 / 四个特征），
+   和下面 barrier strip 是同一套横排结构，不是新的版式语言 */
+.case-module.sit-audience {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.sit-aud-main {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f2f2f2;
+}
+.sit-aud-traits {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.sit-aud-traits span {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(200, 200, 194, 0.58);
+}
+
+.case-module.sit-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--case-gap);
+}
+/* 承载数字的玻璃卡压得很矮：数字比正文明显大，但卡片本身留白
+   克制，不做成 dashboard tile */
+.sit-stat {
+  padding: clamp(14px, 1.4vw, 20px) clamp(16px, 1.6vw, 22px);
+}
+.sit-stat-num {
+  font-size: clamp(30px, 3vw, 46px);
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: #f2f2f2;
+  /* 读数跳动时数字宽度会变（"12%" 和 "100%" 不一样宽），等宽数字
+     让卡片在动画过程中不抖 */
+  font-variant-numeric: tabular-nums;
+  transition: color 0.3s ease;
+}
+/* Hover：卡片本身不放大、不位移（位移那一维归 GSAP 的进场动画管，
+   两边写同一个属性会打架）。只有玻璃更亮一点、边缘更清楚一点、
+   一层极轻的 CBS 蓝辉光、数字更白——离开就还原 */
+.sit-stat {
+  transition: background-color 0.3s ease, border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+@media (hover: hover) {
+  .sit-stat:hover {
+    background-color: rgba(255, 255, 255, 0.065);
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 22px rgba(56, 96, 190, 0.1);
+  }
+  .sit-stat:hover .sit-stat-num {
+    color: #ffffff;
+  }
+}
+.sit-stat-cap {
+  margin-top: var(--case-gap);
+  font-size: 15px;
+  line-height: 1.4;
+  color: rgba(200, 200, 194, 0.58);
+}
+/* Insight strip：不进卡片——它是一句结论，不是被分类的信息。
+   直接裸排在黑底上，主句白色，三个趋势用压暗的 CBS 蓝 */
+.case-module.sit-barrier {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.sit-barrier-line {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f2f2f2;
+}
+.sit-barrier-tags {
+  display: flex;
+  gap: 18px;
+}
+.sit-barrier-tags span {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6d8ad4;
+}
+
+/* 落点那一行：整行一句话排开，不折行。前半句（回到人的那一段）走
+   次级透明度当铺垫，后半句（那个 design opportunity）满亮度白色，
+   同一行里靠透明度分主次，不靠字号也不靠标签 */
+.sit-insight-line {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #f2f2f2;
+  white-space: nowrap;
+}
+/* 透明度写进颜色而不是 opacity：整块的 opacity 归 GSAP 的进场动画
+   管，两边写同一个属性会互相覆盖 */
+.sit-insight-lead {
+  color: rgba(200, 200, 194, 0.58);
+}
+
+/* ══ 03 Experience：三个视觉章节 ══
+   EXPLORE / UNDERSTAND / PREDICT。主体是视频截图，文字只做 label
+   和引导——没有文字卡片。三章版式各不相同（通栏 + 两张细节 /
+   大图 + 方形裁切 / 三格序列），滚下来不重复。
+   章节内部图与图之间是模板的 7px；章节之间才拉开呼吸——这是版心
+   结构（和模板里 4vw 那类同级），不是内容间距 */
+.case-module.sit-chapter + .case-module.sit-chapter {
+  margin-top: clamp(56px, 5vw, 96px);
+}
+/* 章节标题句：正文尺寸白色 600（和全站一样，不引入新的大标题），
+   引导句降到次级透明度 */
+.sit-ch-line {
+  margin-top: var(--case-gap);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #f2f2f2;
+}
+/* 章节编号：和名字同一行、同一个 mono 字号，颜色降一档，
+   让 EXPLORE / UNDERSTAND / PREDICT 本身仍然是那一行的重点 */
+.sit-ch-num {
+  margin-right: 0.9em;
+  color: rgba(200, 200, 194, 0.45);
+}
+/* 文字块和这一章的第一张图之间，仍然是模板的 7px */
+.sit-ch-lead,
+.sit-ch-row-2 {
+  margin-top: var(--case-gap);
+}
+/* EXPLORE：通栏主视觉下面两张等宽细节。三张都是 16:9 原图，
+   按原始比例排，不设 aspect-ratio、不裁切 */
+.sit-ch-row-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--case-gap);
+  align-items: start;
+}
+.sit-chapter img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* UNDERSTAND：一段通栏视频，和 EXPLORE 的主视觉同宽同比例 */
+.sit-chapter video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ── 喇叭开关（挂在 02 的标题行末尾）──
+   默认静音、显示"关闭"态，只有用户点了才出声。做法和 Rise Streak
+   的 companion 喇叭完全一致（同一套图标和状态类），只是配色跟这一页
+   走 CBS 蓝 */
+.sit-sound {
+  margin-left: 0.9em;
+  /* flex 子项默认可收缩——不禁止的话按钮会被标题挤成几像素、
+     等于隐形（Rise Streak 踩过这个坑） */
+  flex: none;
+  /* 负的纵向边距：按钮 22px 高，但不该把这一行 mono 标签撑高 */
+  margin-top: -6px;
+  margin-bottom: -6px;
+  padding: 2px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  color: #6d8ad4;
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+.sit-sound:hover {
+  transform: scale(1.12);
+  color: #8aa4e0;
+}
+.sit-sound svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sit-snd-body {
+  fill: currentColor;
+  stroke: none;
+}
+/* 关闭态：斜杠；打开态：声波 */
+.sit-snd-wave {
+  display: none;
+}
+.sit-sound.is-on .sit-snd-wave {
+  display: block;
+}
+.sit-sound.is-on .sit-snd-slash {
+  display: none;
+}
+/* 标签行要能容纳按钮：改成 flex 才能让按钮和文字在同一条基线上 */
+.sit-ch-label {
+  display: flex;
+  align-items: center;
+}
+/* PREDICT：两段视频各占一行、通栏满宽，是整段 Experience 视觉
+   权重最高的一处。说明落在各自画面的右下角——右对齐、次级透明度，
+   和 Rise Streak 的 Testing 说明是同一套处理 */
+.sit-ch-full {
+  margin: 0;
+  margin-top: var(--case-gap);
+  min-width: 0;
+}
+/* 并排两张时（EXPLORE 的两张细节），figure 已经是 grid item，
+   自己的 margin-top 由外层 grid 的 gap 负责，不再叠加 */
+.sit-ch-row-2 > .sit-ch-full {
+  margin-top: 0;
+}
+.sit-ch-cap {
+  margin-top: var(--case-gap);
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: right;
+  color: rgba(200, 200, 194, 0.58);
+}
+.sit-figure {
+  margin: 0;
+  min-width: 0;
+}
+.sit-note {
+  margin-top: var(--case-gap);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8c8c86;
+}
+
+/* ══ 04 Campaign ══
+   版式语言和 Experience 的三章完全一致：编号 + 名字 + 视觉 +
+   一句话（复用 .sit-chapter / .sit-ch-label / .sit-ch-num /
+   .sit-ch-lead / .sit-ch-row-2 / .sit-ch-line），只是这里的
+   句子排在图之后。所以这一段只需要三条自己的规则 */
+
+/* 02 SOCIAL：两台手机等大并排。两张原图差 0.6%（468×940 /
+   471×940），锁同一个 1:2 画框才是肉眼严格一致。宽度取内容列的
+   41%——比原来的 320px 明显放大，又不至于把只有 468px 宽的原图
+   拉糊；右侧留白是刻意的，不填满整列 */
+.sit-social {
+  margin-top: var(--case-gap);
+  display: grid;
+  grid-template-columns: 41% 41%;
+  gap: var(--case-gap);
+  align-items: start;
+}
+.sit-social img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 2;
+  object-fit: cover;
+}
+
+/* 03 POP-UP：两张并排一行。原图比例不同（sandbox 是 1:1，
+   newsroom 是 3:2），统一到 4:3 才能等宽等高——等宽由 grid 的等分列
+   保证，等高由这个固定比例保证，原图文件不动 */
+.sit-cmp-detail {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* ══ 窄屏：网格全部退回单列/双列，权重和桌面规则持平（双类），
+   否则会被桌面规则压住 ══ */
+@media (max-width: 900px) {
+  /* 900px 以下内容列太窄，一行排不下，放回多行 */
+  .case-pull-quote,
+  .sit-insight-line {
+    white-space: normal;
+  }
+  .case-module.sit-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .sit-stat-num {
+    font-size: clamp(32px, 9vw, 44px);
+  }
+  .sit-ch-row-2,
+  .sit-social {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
