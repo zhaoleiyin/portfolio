@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="css/work.css" />
   <link rel="stylesheet" href="css/outro.css" />
 
-  <!-- 跨页锚点防闪现：从 case 页点 Work/About/Contact 回来时带着
+  <!-- 跨页锚点防闪现：从 case 页点 Work/About 回来时带着
        #hash，浏览器会先画出页面顶部（娃娃机 Hero），约 100ms 后解析到
        目标元素才跳过去——那一下闪现就是这么来的（线上网络更慢会更明显）。
        处理：带 hash 进来时先罩一层站底色的全屏遮罩（首帧是黑，不是
@@ -72,7 +72,8 @@
     <nav class="site-nav-links">
       <a href="#work">Work</a>
       <a href="#about">About</a>
-      <a href="#outro">Contact</a>
+      <!-- Contact 不再滚到 Outro，直接开邮件客户端 -->
+      <a href="mailto:yinzhaolei1113@gmail.com">Contact</a>
     </nav>
   </header>
 
