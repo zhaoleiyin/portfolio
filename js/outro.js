@@ -292,7 +292,7 @@
     const startDownload = () => {
       const a = document.createElement("a");
       a.href = resumeChip.getAttribute("href");
-      a.download = "resume.pdf";
+      a.download = "Zhaolei_Yin_Resume.pdf";
       document.body.appendChild(a);
       a.click();
       a.remove();
